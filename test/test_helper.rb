@@ -23,9 +23,9 @@ module TestHelper
       out, err, status = Open3.capture3(*(['bzip2'] + arguments))
 
       args_string = arguments.collect {|a| "'#{a}'" }.join(' ')
-      assert(status.exitstatus == 0, "`bzip2 #{args_string}` exit status was non-zero")
-      assert(out == '', "`bzip2 #{args_string}` returned output: #{out}")
       assert(err == '', "`bzip2 #{args_string}` returned error: #{err}")
+      assert(out == '', "`bzip2 #{args_string}` returned output: #{out}")
+      assert(status.exitstatus == 0, "`bzip2 #{args_string}` exit status was non-zero")
     end
 
     def assert_bunzip2_successful(*arguments)

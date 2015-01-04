@@ -48,7 +48,7 @@ class WriterTest < Minitest::Test
         end
       end
 
-      assert_bunzip2_successful("'#{compressed}'")
+      assert_bunzip2_successful(compressed)
 
       uncompressed = File.join(dir, 'test')
       assert(File.exist?(uncompressed))

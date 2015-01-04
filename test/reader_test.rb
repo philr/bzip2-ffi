@@ -65,7 +65,7 @@ class ReaderTest < Minitest::Test
         FileUtils.touch(uncompressed)
       end
       
-      assert_bzip2_successful("-9 '#{uncompressed}'")
+      assert_bzip2_successful(uncompressed)
     
       compressed = File.join(dir, "test.bz2")
       assert(File.exist?(compressed))

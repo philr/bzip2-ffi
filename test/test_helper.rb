@@ -19,16 +19,17 @@ module TestHelper
       assert(FileUtils.identical?(exp, act), msg)
     end
 
-    def assert_bzip2_successful(arguments)
-      out, err, status = Open3.capture3("bzip2 #{arguments}")
+    def assert_bzip2_successful(*arguments)
+      out, err, status = Open3.capture3(*(['bzip2'] + arguments))
 
-      assert(status.exitstatus == 0, "`bzip2 #{arguments}` exit status was non-zero")
-      assert(out == '', "`bzip2 #{arguments}` returned output: #{out}")
-      assert(err == '', "`bzip2 #{arguments}` returned error: #{err}")
+      args_string = arguments.collect {|a| "'#{a}'" }.join(' ')
+      assert(status.exitstatus == 0, "`bzip2 #{args_string}` exit status was non-zero")
+      assert(out == '', "`bzip2 #{args_string}` returned output: #{out}")
+      assert(err == '', "`bzip2 #{args_string}` returned error: #{err}")
     end
 
-    def assert_bunzip2_successful(arguments)
-      assert_bzip2_successful("--decompress #{arguments}")
+    def assert_bunzip2_successful(*arguments)
+      assert_bzip2_successful(*(['--decompress'] + arguments))
     end
   end
 

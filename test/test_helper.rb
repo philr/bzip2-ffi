@@ -19,17 +19,33 @@ module TestHelper
       assert(FileUtils.identical?(exp, act), msg)
     end
 
-    def assert_bzip2_successful(*arguments)
+    def assert_bzip2_successful(file)
+      assert_bzip2_command_successful(path_separators_for_command(file))
+    end
+
+    def assert_bunzip2_successful(file)
+      assert_bzip2_command_successful('--decompress', path_separators_for_command(file))
+    end
+
+    private
+
+    if File::ALT_SEPARATOR
+      def path_separators_for_command(path)
+        path.gsub(File::SEPARATOR, File::ALT_SEPARATOR)
+      end
+    else
+      def path_separators_for_command(path)
+        path
+      end
+    end
+
+    def assert_bzip2_command_successful(*arguments)
       out, err, status = Open3.capture3(*(['bzip2'] + arguments))
 
       args_string = arguments.collect {|a| "'#{a}'" }.join(' ')
       assert(err == '', "`bzip2 #{args_string}` returned error: #{err}")
       assert(out == '', "`bzip2 #{args_string}` returned output: #{out}")
       assert(status.exitstatus == 0, "`bzip2 #{args_string}` exit status was non-zero")
-    end
-
-    def assert_bunzip2_successful(*arguments)
-      assert_bzip2_successful(*(['--decompress'] + arguments))
     end
   end
 

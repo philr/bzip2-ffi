@@ -9,6 +9,14 @@ module Bzip2
         def open(io, options = {})
           super
         end
+
+        private
+
+        def finalize(stream)
+          ->(id) do
+            Libbz2::BZ2_bzCompressEnd(stream)
+          end
+        end
       end
 
       def initialize(io, options = {})    
@@ -22,6 +30,8 @@ module Bzip2
         raise RangeError, 'work_factor must be >= 0 and <= 250' if work_factor < 0 || work_factor > 250
         
         check_error(Libbz2::BZ2_bzCompressInit(stream, block_size, 0, work_factor))
+
+        ObjectSpace.define_finalizer(self, self.class.send(:finalize, stream))
       end
 
       def close
@@ -48,7 +58,9 @@ module Bzip2
           s[:next_out] = nil
         end
 
-        check_error(Libbz2::BZ2_bzCompressEnd(s))
+        res = Libbz2::BZ2_bzCompressEnd(s)
+        ObjectSpace.undefine_finalizer(self)
+        check_error(res)
 
         super
       end

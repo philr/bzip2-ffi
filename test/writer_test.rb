@@ -152,4 +152,10 @@ class WriterTest < Minitest::Test
     writer.close
     assert_raises(IOError) { writer.write('test') }
   end
+
+  def test_finalizer
+    # Code coverage will verify that the finalizer was called.
+    10.times { Bzip2::FFI::Writer.new(DummyIO.new) }
+    GC.start
+  end
 end

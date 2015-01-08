@@ -344,4 +344,10 @@ class ReaderTest < Minitest::Test
     # possible to restore the position to the end of the bzip2 stream.
     assert_equal(0, suffixed.read.bytesize)
   end
+
+  def test_finalizer
+    # Code coverage will verify that the finalizer was called.
+    10.times { Bzip2::FFI::Reader.new(StringIO.new) }
+    GC.start
+  end
 end

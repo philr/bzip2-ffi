@@ -12,6 +12,14 @@ module Bzip2
         def open(io, options = {})
           super
         end
+
+        private
+
+        def finalize(stream)
+          ->(id) do
+            Libbz2::BZ2_bzDecompressEnd(stream)
+          end
+        end
       end
     
       def initialize(io, options = {})
@@ -20,18 +28,20 @@ module Bzip2
 
         small = options[:small]
 
-        check_error(Libbz2::BZ2_bzDecompressInit(stream, 0, small ? 1 : 0))
-
         @in_eof = false
         @out_eof = false
-        @in_buffer = nil        
+        @in_buffer = nil
+
+        check_error(Libbz2::BZ2_bzDecompressInit(stream, 0, small ? 1 : 0))
+
+        ObjectSpace.define_finalizer(self, self.class.send(:finalize, stream))
       end
 
       def close
         s = stream
 
         unless @out_eof
-          check_error(Libbz2::BZ2_bzDecompressEnd(s))
+          decompress_end(s)
         end
       
         s[:next_in] = nil
@@ -144,7 +154,7 @@ module Bzip2
                 @in_buffer = nil
               end
 
-              check_error(Libbz2::BZ2_bzDecompressEnd(s))
+              decompress_end(s)
               
               @out_eof = true
               break
@@ -171,6 +181,12 @@ module Bzip2
         else
           result
         end        
+      end
+
+      def decompress_end(s)
+        res = Libbz2::BZ2_bzDecompressEnd(s)
+        ObjectSpace.undefine_finalizer(self)
+        check_error(res)
       end
     end
   end

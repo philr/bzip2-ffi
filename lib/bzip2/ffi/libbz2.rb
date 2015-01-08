@@ -6,7 +6,7 @@ module Bzip2
     module Libbz2
       extend ::FFI::Library
 
-      ffi_lib 'bz2'
+      ffi_lib ['bz2', 'libbz2.dll']
 
       BZ_RUN    = 0
       BZ_FLUSH  = 1

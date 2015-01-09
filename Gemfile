@@ -5,5 +5,6 @@ gemspec
 group :test do
   gem 'minitest', '~> 5.0'
   gem 'rake'
-  gem 'simplecov', '~> 0.9'
+  gem 'simplecov', '~> 0.9', require: false
+  gem 'coveralls', require: false
 end

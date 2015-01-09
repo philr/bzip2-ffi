@@ -1,14 +1,16 @@
-require 'simplecov'
-require 'coveralls'
+unless RUBY_ENGINE == 'jruby'
+  require 'simplecov'
+  require 'coveralls'
 
-SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
-  SimpleCov::Formatter::HTMLFormatter,
-  Coveralls::SimpleCov::Formatter
-]
+  SimpleCov.formatter = SimpleCov::Formatter::MultiFormatter[
+    SimpleCov::Formatter::HTMLFormatter,
+    Coveralls::SimpleCov::Formatter
+  ]
 
-SimpleCov.start do
-  add_filter 'test'
-  project_name 'Bzip2::FFI'
+  SimpleCov.start do
+    add_filter 'test'
+    project_name 'Bzip2::FFI'
+  end
 end
 
 require 'bzip2/ffi'

@@ -138,41 +138,45 @@ class ReaderTest < Minitest::Test
 
   def test_read_zero_before_eof
     File.open(fixture_path('bzipped'), 'rb') do |file|
-      reader = Bzip2::FFI::Reader.new(file)
-      decompressed = reader.read(0)
-      refute_nil(decompressed)
-      assert_equal(0, decompressed.bytesize)
+      Bzip2::FFI::Reader.open(file) do |reader|
+        decompressed = reader.read(0)
+        refute_nil(decompressed)
+        assert_equal(0, decompressed.bytesize)
+      end
     end
   end
 
   def test_read_zero_before_eof_buffer
     File.open(fixture_path('bzipped'), 'rb') do |file|
-      reader = Bzip2::FFI::Reader.new(file)
-      buffer = 'outbuf'
-      decompressed = reader.read(0, buffer)
-      assert_same(buffer, decompressed)
-      assert_equal(0, decompressed.bytesize)
+      Bzip2::FFI::Reader.open(file) do |reader|
+        buffer = 'outbuf'
+        decompressed = reader.read(0, buffer)
+        assert_same(buffer, decompressed)
+        assert_equal(0, decompressed.bytesize)
+      end
     end
   end
 
   def test_read_zero_after_eof
     File.open(fixture_path('bzipped'), 'rb') do |file|
-      reader = Bzip2::FFI::Reader.new(file)
-      reader.read
-      decompressed = reader.read(0) # would return nil if greater than 0
-      refute_nil(decompressed)
-      assert_equal(0, decompressed.bytesize)
+      Bzip2::FFI::Reader.open(file) do |reader|
+        reader.read
+        decompressed = reader.read(0) # would return nil if greater than 0
+        refute_nil(decompressed)
+        assert_equal(0, decompressed.bytesize)
+      end
     end
   end
 
   def test_read_zero_after_eof_buffer
     File.open(fixture_path('bzipped'), 'rb') do |file|
-      reader = Bzip2::FFI::Reader.new(file)
-      reader.read
-      buffer = 'outbuf'
-      decompressed = reader.read(0, buffer) # would return nil if greater than 0
-      assert_same(buffer, decompressed)
-      assert_equal(0, decompressed.bytesize)
+      Bzip2::FFI::Reader.open(file) do |reader|
+        reader.read
+        buffer = 'outbuf'
+        decompressed = reader.read(0, buffer) # would return nil if greater than 0
+        assert_same(buffer, decompressed)
+        assert_equal(0, decompressed.bytesize)
+      end
     end
   end
 

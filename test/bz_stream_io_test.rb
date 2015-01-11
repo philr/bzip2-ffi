@@ -230,6 +230,6 @@ class BzStreamIOTest < Minitest::Test
   end
 
   def test_open_io_nil
-    assert_raises(ArgumentError) { TestIO.new(nil) }
+    assert_raises(ArgumentError) { TestIO.open(nil) }
   end
 end

@@ -162,7 +162,7 @@ class WriterTest < Minitest::Test
   end
 
   def test_open_io_nil
-    assert_raises(ArgumentError) { Bzip2::FFI::Reader.open(nil) }
+    assert_raises(ArgumentError) { Bzip2::FFI::Writer.open(nil) }
   end
 
   def test_open_block_io

@@ -12,6 +12,13 @@ module Bzip2
           if io_or_path.kind_of?(String) || io_or_path.kind_of?(Pathname)
             options = options.merge(autoclose: true)
             io = File.open(io_or_path.to_s, 'wb')
+
+            begin
+              io.advise(:sequential)
+              io.advise(:noreuse)
+            rescue
+            end
+
             super(io, options)
           else
             super

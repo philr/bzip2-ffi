@@ -1,3 +1,5 @@
+require 'pathname'
+
 module Bzip2
   module FFI
     class Writer < BzStreamIO
@@ -6,8 +8,14 @@ module Bzip2
       class << self
         public :new
 
-        def open(io, options = {})
-          super
+        def open(io_or_path, options = {})
+          if io_or_path.kind_of?(String) || io_or_path.kind_of?(Pathname)
+            options = options.merge(autoclose: true)
+            io = File.open(io_or_path.to_s, 'wb')
+            super(io, options)
+          else
+            super
+          end
         end
 
         private

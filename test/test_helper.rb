@@ -35,6 +35,15 @@ module TestHelper
       assert_bzip2_command_successful('--decompress', path_separators_for_command(file))
     end
 
+    def assert_nothing_raised(msg = nil)
+      begin
+        yield
+      rescue => e
+        full_message = message(msg) { exception_details(e, 'Exception raised: ') }
+        flunk(full_message)
+      end
+    end
+
     private
 
     if File::ALT_SEPARATOR

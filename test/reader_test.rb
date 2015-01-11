@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'pathname'
 require 'stringio'
 require 'test_helper'
 require 'tmpdir'
@@ -353,5 +354,78 @@ class ReaderTest < Minitest::Test
     # Code coverage will verify that the finalizer was called.
     10.times { Bzip2::FFI::Reader.new(StringIO.new) }
     GC.start
+  end
+
+  def test_open_io_nil
+    assert_raises(ArgumentError) { Bzip2::FFI::Reader.open(nil) }
+  end
+
+  def test_open_block_io
+    io = StringIO.new
+    Bzip2::FFI::Reader.open(io, autoclose: true) do |reader|
+      assert_same(io, reader.send(:io))
+      assert_equal(true, reader.autoclose?)
+    end
+  end
+
+  def test_open_no_block_io
+    io = StringIO.new
+    reader = Bzip2::FFI::Reader.open(io, autoclose: true)
+    begin
+      assert_same(io, reader.send(:io))
+      assert_equal(true, reader.autoclose?)
+    ensure
+      reader.close
+    end
+  end
+
+  def test_open_block_path
+    path = fixture_path('bzipped')
+    [path, Pathname.new(path)].each do |path_param|
+      Bzip2::FFI::Reader.open(path_param) do |reader|
+        io = reader.send(:io)
+        assert_kind_of(File, io)
+        assert_equal(path, io.path)
+        assert_raises(IOError) { io.write('test') }
+        assert_nothing_raised { io.read(1) }
+      end
+    end
+  end
+
+  def test_open_no_block_path
+    path = fixture_path('bzipped')
+    [path, Pathname.new(path)].each do |path_param|
+      reader = Bzip2::FFI::Reader.open(path_param)
+      begin
+        io = reader.send(:io)
+        assert_kind_of(File, io)
+        assert_equal(path, io.path)
+        assert_raises(IOError) { io.write('test') }
+        assert_nothing_raised { io.read(1) }
+      ensure
+        io.close
+      end
+    end
+  end
+
+  def test_open_block_path_always_autoclosed
+    Bzip2::FFI::Reader.open(fixture_path('bzipped'), autoclose: false) do |reader|    
+      assert_equal(true, reader.autoclose?)
+    end
+  end
+
+  def test_open_no_block_path_always_autoclosed
+    reader = Bzip2::FFI::Reader.open(fixture_path('bzipped'), autoclose: false)
+    begin
+      assert_equal(true, reader.autoclose?)
+    ensure
+      reader.close
+    end
+  end
+
+  def test_open_path_does_not_exist
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      assert_raises(Errno::ENOENT) { Bzip2::FFI::Reader.open(File.join(dir, 'test')) }
+    end
   end
 end

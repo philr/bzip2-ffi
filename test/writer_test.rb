@@ -1,5 +1,6 @@
 # encoding: UTF-8
 
+require 'pathname'
 require 'test_helper'
 require 'tmpdir'
 
@@ -13,6 +14,9 @@ class WriterTest < Minitest::Test
   
     def write(string)
       @written_bytes += string.bytesize
+    end
+
+    def close
     end
   end
 
@@ -157,5 +161,86 @@ class WriterTest < Minitest::Test
     # Code coverage will verify that the finalizer was called.
     10.times { Bzip2::FFI::Writer.new(DummyIO.new) }
     GC.start
+  end
+
+  def test_open_io_nil
+    assert_raises(ArgumentError) { Bzip2::FFI::Reader.open(nil) }
+  end
+
+  def test_open_block_io
+    io = DummyIO.new
+    Bzip2::FFI::Writer.open(io, autoclose: true) do |writer|
+      assert_same(io, writer.send(:io))
+      assert_equal(true, writer.autoclose?)
+    end
+  end
+
+  def test_open_no_block_io
+    io = DummyIO.new
+    writer = Bzip2::FFI::Writer.open(io, autoclose: true)
+    begin
+      assert_same(io, writer.send(:io))
+      assert_equal(true, writer.autoclose?)
+    ensure
+      writer.close
+    end
+  end
+
+  def test_open_block_path
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      path = File.join(dir, 'test')
+      [path, Pathname.new(path)].each do |path_param|
+        Bzip2::FFI::Writer.open(path_param) do |writer|
+          io = writer.send(:io)
+          assert_kind_of(File, io)
+          assert_equal(path, io.path)
+          assert_raises(IOError) { io.read(1) }
+          assert_nothing_raised { io.write('test') }
+        end
+      end
+    end
+  end
+
+  def test_open_no_block_path
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      path = File.join(dir, 'test')
+      [path, Pathname.new(path)].each do |path_param|
+        writer = Bzip2::FFI::Writer.open(path_param)
+        begin
+          io = writer.send(:io)
+          assert_kind_of(File, io)
+          assert_equal(path, io.path)
+          assert_raises(IOError) { io.read(1) }
+          assert_nothing_raised { io.write('test') }
+        ensure
+          writer.close
+        end
+      end
+    end
+  end
+
+  def test_open_block_path_always_autoclosed
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      Bzip2::FFI::Writer.open(File.join(dir, 'test'), autoclose: false) do |writer|    
+        assert_equal(true, writer.autoclose?)
+      end
+    end
+  end
+
+  def test_open_no_block_path_always_autoclosed
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      writer = Bzip2::FFI::Writer.open(File.join(dir, 'test'), autoclose: false)
+      begin
+        assert_equal(true, writer.autoclose?)
+      ensure
+        writer.close
+      end
+    end
+  end
+
+  def test_open_parent_dir_does_not_exist
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      assert_raises(Errno::ENOENT) { Bzip2::FFI::Writer.open(File.join(dir, 'test_dir', 'test_file')) }
+    end
   end
 end

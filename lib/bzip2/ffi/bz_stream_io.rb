@@ -38,7 +38,7 @@ module Bzip2
       end
 
       def close
-        @io.close if autoclose?
+        @io.close if autoclose? && @io.respond_to?(:close)
         @stream = nil
       end
 

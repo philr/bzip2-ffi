@@ -15,9 +15,6 @@ class WriterTest < Minitest::Test
     def write(string)
       @written_bytes += string.bytesize
     end
-
-    def close
-    end
   end
 
   def write_fixture(writer, fixture, read_size = nil)    

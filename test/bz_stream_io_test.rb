@@ -30,6 +30,9 @@ class BzStreamIOTest < Minitest::Test
     end
   end
 
+  class NoCloseIO
+  end
+
   class TestIO < Bzip2::FFI::BzStreamIO
     class << self
       public :new
@@ -98,6 +101,12 @@ class BzStreamIOTest < Minitest::Test
     refute(dummy_io.closed?)
     io.close
     assert(dummy_io.closed?)
+  end
+
+  def test_close_with_unclosable_and_autoclose
+    no_close_io = NoCloseIO.new
+    io = TestIO.new(no_close_io, autoclose: true)
+    assert_nothing_raised { io.close }
   end
 
   def test_closed

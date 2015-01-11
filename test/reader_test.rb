@@ -71,13 +71,11 @@ class ReaderTest < Minitest::Test
       compressed = File.join(dir, "test.bz2")
       assert(File.exist?(compressed))
 
-      File.open(compressed, 'rb') do |file|
-        Bzip2::FFI::Reader.open(file, options[:reader_options] || {}) do |reader|
-          if fixture
-            compare_fixture(reader, fixture, options[:read_size], options[:use_outbuf])
-          else
-            assert_equal(0, reader.read.bytesize)
-          end
+      Bzip2::FFI::Reader.open(compressed, options[:reader_options] || {}) do |reader|
+        if fixture
+          compare_fixture(reader, fixture, options[:read_size], options[:use_outbuf])
+        else
+          assert_equal(0, reader.read.bytesize)
         end
       end
     end    
@@ -128,56 +126,46 @@ class ReaderTest < Minitest::Test
   end
 
   def test_close_mid_read
-    File.open(fixture_path('bzipped'), 'rb') do |file|
-      Bzip2::FFI::Reader.open(file) do |reader|
-        decompressed = reader.read(1)
-        refute_nil(decompressed)
-        assert_equal(1, decompressed.bytesize)        
-      end
+    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+      decompressed = reader.read(1)
+      refute_nil(decompressed)
+      assert_equal(1, decompressed.bytesize)
     end
   end
 
   def test_read_zero_before_eof
-    File.open(fixture_path('bzipped'), 'rb') do |file|
-      Bzip2::FFI::Reader.open(file) do |reader|
-        decompressed = reader.read(0)
-        refute_nil(decompressed)
-        assert_equal(0, decompressed.bytesize)
-      end
+    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+      decompressed = reader.read(0)
+      refute_nil(decompressed)
+      assert_equal(0, decompressed.bytesize)
     end
   end
 
   def test_read_zero_before_eof_buffer
-    File.open(fixture_path('bzipped'), 'rb') do |file|
-      Bzip2::FFI::Reader.open(file) do |reader|
-        buffer = 'outbuf'
-        decompressed = reader.read(0, buffer)
-        assert_same(buffer, decompressed)
-        assert_equal(0, decompressed.bytesize)
-      end
+    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+      buffer = 'outbuf'
+      decompressed = reader.read(0, buffer)
+      assert_same(buffer, decompressed)
+      assert_equal(0, decompressed.bytesize)
     end
   end
 
   def test_read_zero_after_eof
-    File.open(fixture_path('bzipped'), 'rb') do |file|
-      Bzip2::FFI::Reader.open(file) do |reader|
-        reader.read
-        decompressed = reader.read(0) # would return nil if greater than 0
-        refute_nil(decompressed)
-        assert_equal(0, decompressed.bytesize)
-      end
+    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+      reader.read
+      decompressed = reader.read(0) # would return nil if greater than 0
+      refute_nil(decompressed)
+      assert_equal(0, decompressed.bytesize)
     end
   end
 
   def test_read_zero_after_eof_buffer
-    File.open(fixture_path('bzipped'), 'rb') do |file|
-      Bzip2::FFI::Reader.open(file) do |reader|
-        reader.read
-        buffer = 'outbuf'
-        decompressed = reader.read(0, buffer) # would return nil if greater than 0
-        assert_same(buffer, decompressed)
-        assert_equal(0, decompressed.bytesize)
-      end
+    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+      reader.read
+      buffer = 'outbuf'
+      decompressed = reader.read(0, buffer) # would return nil if greater than 0
+      assert_same(buffer, decompressed)
+      assert_equal(0, decompressed.bytesize)
     end
   end
 
@@ -230,11 +218,9 @@ class ReaderTest < Minitest::Test
   end
 
   def test_non_bzipped
-    File.open(fixture_path('lorem.txt'), 'rb') do |file|
-      Bzip2::FFI::Reader.open(file) do |reader|
-        e = assert_raises(Bzip2::FFI::Error) { reader.read }
-        assert_equal(Bzip2::FFI::Libbz2::BZ_DATA_ERROR_MAGIC, e.error_code)
-      end
+    Bzip2::FFI::Reader.open(fixture_path('lorem.txt')) do |reader|
+      e = assert_raises(Bzip2::FFI::Error) { reader.read }
+      assert_equal(Bzip2::FFI::Libbz2::BZ_DATA_ERROR_MAGIC, e.error_code)
     end
   end
 

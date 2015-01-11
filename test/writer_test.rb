@@ -38,16 +38,14 @@ class WriterTest < Minitest::Test
   def bunzip_test(fixture_or_strings, options = {})  
     Dir.mktmpdir('bzip2-ffi-test') do |dir|      
       compressed = File.join(dir, "test.bz2")
-      File.open(compressed, 'wb') do |file|
-        Bzip2::FFI::Writer.open(file, options[:writer_options] || {}) do |writer|
-          if fixture_or_strings
-            if fixture_or_strings.kind_of?(Array)
-              fixture_or_strings.each do |string|
-                writer.write(string)
-              end              
-            else
-              write_fixture(writer, fixture_or_strings, options[:read_size])
+      Bzip2::FFI::Writer.open(compressed, options[:writer_options] || {}) do |writer|
+        if fixture_or_strings
+          if fixture_or_strings.kind_of?(Array)
+            fixture_or_strings.each do |string|
+              writer.write(string)
             end
+          else
+            write_fixture(writer, fixture_or_strings, options[:read_size])
           end
         end
       end

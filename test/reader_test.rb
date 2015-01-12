@@ -217,6 +217,11 @@ class ReaderTest < Minitest::Test
     end
   end
 
+  def test_close_returns_nil
+    reader = Bzip2::FFI::Reader.new(StringIO.new)
+    assert_nil(reader.close)
+  end
+
   def test_non_bzipped
     Bzip2::FFI::Reader.open(fixture_path('lorem.txt')) do |reader|
       e = assert_raises(Bzip2::FFI::Error) { reader.read }

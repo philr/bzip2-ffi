@@ -109,6 +109,11 @@ class BzStreamIOTest < Minitest::Test
     assert_nothing_raised { io.close }
   end
 
+  def test_close_returns_nil
+    io = TestIO.new(DummyIO.new)
+    assert_nil(io.close)
+  end
+
   def test_closed
     io = TestIO.new(DummyIO.new)
     assert_equal(false, io.closed?)

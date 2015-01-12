@@ -22,11 +22,11 @@ class WriterTest < Minitest::Test
       loop do
         buffer = io.read(read_size)
         break unless buffer
-        writer.write(buffer)
+        assert_equal(buffer.bytesize, writer.write(buffer))
       end
     else
       buffer = io.read
-      writer.write(buffer)
+      assert_equal(buffer.bytesize, writer.write(buffer))
     end
   end
 
@@ -43,7 +43,7 @@ class WriterTest < Minitest::Test
         if fixture_or_strings
           if fixture_or_strings.kind_of?(Array)
             fixture_or_strings.each do |string|
-              writer.write(string)
+              assert_equal(string.bytesize, writer.write(string))
             end
           else
             write_fixture(writer, fixture_or_strings, options[:read_size])

@@ -17,18 +17,22 @@ class WriterTest < Minitest::Test
     end
   end
 
-  def write_fixture(writer, fixture, read_size = nil)    
-    File.open(fixture_path(fixture), 'rb') do |input|
-      if read_size
-        loop do
-          buffer = input.read(read_size)
-          break unless buffer
-          writer.write(buffer)
-        end
-      else
-        buffer = input.read
+  def write_io(writer, io, read_size = nil)
+    if read_size
+      loop do
+        buffer = io.read(read_size)
+        break unless buffer
         writer.write(buffer)
       end
+    else
+      buffer = io.read
+      writer.write(buffer)
+    end
+  end
+
+  def write_fixture(writer, fixture, read_size = nil)
+    File.open(fixture_path(fixture), 'rb') do |input|
+      write_io(writer, input, read_size)
     end
   end
 
@@ -150,6 +154,39 @@ class WriterTest < Minitest::Test
     writer = Bzip2::FFI::Writer.new(DummyIO.new)
     writer.close
     assert_raises(IOError) { writer.write('test') }
+  end
+
+  def test_flush
+    non_flushed = DummyIO.new
+    flushed = DummyIO.new
+
+    Bzip2::FFI::Writer.open(non_flushed) do |writer|
+      write_fixture(writer, 'lorem.txt', 4096)
+    end
+
+    Bzip2::FFI::Writer.open(flushed) do |writer|
+      File.open(fixture_path('lorem.txt'), 'rb') do |fixture|
+        5.times do
+          buffer = fixture.read(4096)
+          assert_equal(4096, buffer.bytesize)
+          assert_equal(4096, writer.write(buffer))
+        end
+
+        assert_same(writer, writer.flush)
+
+        write_io(writer, fixture, 4096)
+      end
+    end
+
+    # Flushed stream will be larger because it forces libbz2 to terminate the
+    # current compression block earlier that it would otherwise do.
+    assert(flushed.written_bytes > non_flushed.written_bytes, 'flushed Writer did not create a larger output')
+  end
+
+  def test_flush_after_close
+    writer = Bzip2::FFI::Writer.new(DummyIO.new)
+    writer.close
+    assert_raises(IOError) { writer.flush }
   end
 
   def test_finalizer

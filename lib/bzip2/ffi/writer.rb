@@ -51,32 +51,10 @@ module Bzip2
 
       def close
         s = stream
-        s[:next_in] = nil
-        s[:avail_in] = 0
-
-        buffer = ::FFI::MemoryPointer.new(1, OUT_BUFFER_SIZE)
-        begin
-          loop do
-            s[:next_out] = buffer
-            s[:avail_out] = buffer.size
-
-            res = Libbz2::BZ2_bzCompress(s, Libbz2::BZ_FINISH)
-            check_error(res)
-
-            count = buffer.size - s[:avail_out]
-            io.write(buffer.read_string(count))
-
-            break if res == Libbz2::BZ_STREAM_END
-          end
-        ensure
-          buffer.free
-          s[:next_out] = nil
-        end
-
+        flush_buffers(s, Libbz2::BZ_FINISH, Libbz2::BZ_STREAM_END)
         res = Libbz2::BZ2_bzCompressEnd(s)
         ObjectSpace.undefine_finalizer(self)
         check_error(res)
-
         super
       end
 
@@ -108,6 +86,37 @@ module Bzip2
         end
 
         string.bytesize
+      end
+
+      def flush
+        flush_buffers(stream, Libbz2::BZ_FLUSH, Libbz2::BZ_RUN_OK)
+        self
+      end
+
+      private
+
+      def flush_buffers(s, action, terminate_result)
+        s[:next_in] = nil
+        s[:avail_in] = 0
+
+        buffer = ::FFI::MemoryPointer.new(1, OUT_BUFFER_SIZE)
+        begin
+          loop do
+            s[:next_out] = buffer
+            s[:avail_out] = buffer.size
+
+            res = Libbz2::BZ2_bzCompress(s, action)
+            check_error(res)
+
+            count = buffer.size - s[:avail_out]
+            io.write(buffer.read_string(count))
+
+            break if res == terminate_result
+          end
+        ensure
+          buffer.free
+          s[:next_out] = nil
+        end
       end     
     end
   end

@@ -17,6 +17,15 @@ class WriterTest < Minitest::Test
     end
   end
 
+  def setup
+    Bzip2::FFI::Writer.test_after_open_file_raise_exception = false
+  end
+
+  def teardown
+    Bzip2::FFI::Writer.test_after_open_file_raise_exception = false
+    Bzip2::FFI::Writer.test_after_open_file_last_io = nil
+  end
+
   def write_io(writer, io, read_size = nil)
     if read_size
       loop do
@@ -278,6 +287,20 @@ class WriterTest < Minitest::Test
   def test_open_parent_dir_does_not_exist
     Dir.mktmpdir('bzip2-ffi-test') do |dir|
       assert_raises(Errno::ENOENT) { Bzip2::FFI::Writer.open(File.join(dir, 'test_dir', 'test_file')) }
+    end
+  end
+
+  def test_open_proc_not_allowed
+    assert_raises(ArgumentError) { Bzip2::FFI::Writer.open(-> { StringIO.new }) }
+  end
+
+  def test_open_after_open_file_exception_closes_file
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      Bzip2::FFI::Writer.test_after_open_file_raise_exception = true
+      assert_raises(RuntimeError) { Bzip2::FFI::Writer.open(File.join(dir, 'test')) }
+      file = Bzip2::FFI::Writer.test_after_open_file_last_io
+      refute_nil(file)
+      assert(file.closed?)
     end
   end
 end

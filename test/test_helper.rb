@@ -18,6 +18,21 @@ require 'fileutils'
 require 'minitest/autorun'
 require 'open3'
 
+class Bzip2::FFI::BzStreamIO
+  class << self
+    attr_accessor :test_after_open_file_raise_exception
+    attr_accessor :test_after_open_file_last_io
+
+    alias_method :default_after_open_file, :after_open_file
+
+    def after_open_file(io)
+      @test_after_open_file_last_io = io
+      default_after_open_file(io)
+      raise 'test' if test_after_open_file_raise_exception
+    end
+  end
+end
+
 module TestHelper
   BASE_DIR = File.expand_path(File.dirname(__FILE__))
 

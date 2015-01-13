@@ -45,6 +45,8 @@ class BzStreamIOTest < Minitest::Test
 
     def initialize(io, options = {})
       super
+
+      raise 'test' if options[:test_initialize_raise_exception]
     end
   end
 
@@ -209,6 +211,35 @@ class BzStreamIOTest < Minitest::Test
     assert_same(dummy_io, io.io)
   end
 
+  def test_open_no_block_proc
+    dummy_io = nil
+    io = TestIO.open(-> { dummy_io = DummyIO.new })
+    refute_nil(dummy_io)
+    assert_same(dummy_io, io.io)
+    refute(dummy_io.closed?)
+  end
+
+  def test_open_no_block_proc_closed_on_exception
+    dummy_io = nil
+
+    assert_raises(RuntimeError) do
+      TestIO.open(-> { dummy_io = DummyIO.new }, test_initialize_raise_exception: true)
+    end
+
+    refute_nil(dummy_io)
+    assert(dummy_io.closed?)
+  end
+
+  def test_open_no_block_proc_closed_on_exception_unless_no_close
+    no_close_io = nil
+
+    assert_raises(RuntimeError) do
+      TestIO.open(-> { no_close_io = NoCloseIO.new }, test_initialize_raise_exception: true)
+    end
+
+    refute_nil(no_close_io)
+  end
+
   def test_open_block
     dummy_io = DummyIO.new
     copy_io = nil
@@ -241,6 +272,41 @@ class BzStreamIOTest < Minitest::Test
 
     assert(copy_io.closed?)
     assert_equal(42, res) 
+  end
+
+  def test_open_block_proc
+    dummy_io = nil
+
+    TestIO.open(-> { dummy_io = DummyIO.new }) do |io|
+      refute_nil(dummy_io)
+      assert_same(dummy_io, io.io)
+      refute(dummy_io.closed?)
+    end
+  end
+
+  def test_open_block_proc_closed_on_exception
+    dummy_io = nil
+
+    assert_raises(RuntimeError) do
+      TestIO.open(-> { dummy_io = DummyIO.new }, test_initialize_raise_exception: true) do |io|
+        flunk('block should not be called')
+      end
+    end
+
+    refute_nil(dummy_io)
+    assert(dummy_io.closed?)
+  end
+
+  def test_open_block_proc_closed_on_exception_unless_no_close
+    no_close_io = nil
+
+    assert_raises(RuntimeError) do
+      TestIO.open(-> { no_close_io = NoCloseIO.new }, test_initialize_raise_exception: true) do |io|
+        flunk('block should not be called')
+      end
+    end
+
+    refute_nil(no_close_io)
   end
 
   def test_open_io_nil

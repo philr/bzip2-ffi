@@ -9,6 +9,15 @@ class ReaderTest < Minitest::Test
     undef_method :seek
   end
 
+  def setup
+    Bzip2::FFI::Reader.test_after_open_file_raise_exception = false
+  end
+
+  def teardown
+    Bzip2::FFI::Reader.test_after_open_file_raise_exception = false
+    Bzip2::FFI::Reader.test_after_open_file_last_io = nil
+  end
+
   def compare_fixture(reader, fixture, read_size = nil, use_outbuf = nil)
     File.open(fixture_path(fixture), 'rb') do |input|
       if read_size
@@ -418,5 +427,17 @@ class ReaderTest < Minitest::Test
     Dir.mktmpdir('bzip2-ffi-test') do |dir|
       assert_raises(Errno::ENOENT) { Bzip2::FFI::Reader.open(File.join(dir, 'test')) }
     end
+  end
+
+  def test_open_proc_not_allowed
+    assert_raises(ArgumentError) { Bzip2::FFI::Reader.open(-> { StringIO.new }) }
+  end
+
+  def test_open_after_open_file_exception_closes_file
+    Bzip2::FFI::Reader.test_after_open_file_raise_exception = true
+    assert_raises(RuntimeError) { Bzip2::FFI::Reader.open(fixture_path('bzipped')) }
+    file = Bzip2::FFI::Reader.test_after_open_file_last_io
+    refute_nil(file)
+    assert(file.closed?)
   end
 end

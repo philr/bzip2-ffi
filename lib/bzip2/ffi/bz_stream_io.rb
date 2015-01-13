@@ -6,8 +6,18 @@ module Bzip2
 
         protected
       
-        def open(io, options = {})
-          bz_io = new(io, options)
+        def open(io_or_proc, options = {})
+          if io_or_proc.kind_of?(Proc)
+            io = io_or_proc.call
+            begin
+              bz_io = new(io, options)
+            rescue
+              io.close if io.respond_to?(:close)
+              raise
+            end
+          else
+            bz_io = new(io_or_proc, options)
+          end
 
           if block_given?
             begin            
@@ -17,6 +27,14 @@ module Bzip2
             end
           else
             bz_io
+          end
+        end
+
+        def after_open_file(io)
+          # JRuby 1.7.18 doesn't have a File#advise method (in any mode).
+          if io.respond_to?(:advise)
+            io.advise(:sequential)
+            io.advise(:noreuse)
           end
         end
       end

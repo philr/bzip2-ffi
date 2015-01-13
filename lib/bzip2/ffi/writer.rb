@@ -11,17 +11,24 @@ module Bzip2
         def open(io_or_path, options = {})
           if io_or_path.kind_of?(String) || io_or_path.kind_of?(Pathname)
             options = options.merge(autoclose: true)
-            io = File.open(io_or_path.to_s, 'wb')
+            proc = -> do
+              io = File.open(io_or_path.to_s, 'wb')
 
-            # JRuby 1.7.18 doesn't have a File#advise method (in any mode).
-            if io.respond_to?(:advise)
-              io.advise(:sequential)
-              io.advise(:noreuse)
+              begin
+                after_open_file(io)
+              rescue
+                io.close
+                raise
+              end
+
+              io
             end
 
-            super(io, options)
-          else
+            super(proc, options)
+          elsif !io_or_path.kind_of?(Proc)
             super
+          else
+            raise ArgumentError, 'io_or_path must be an IO-like object or a path'
           end
         end
 

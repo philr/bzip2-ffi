@@ -360,6 +360,10 @@ class ReaderTest < Minitest::Test
     assert_raises(ArgumentError) { Bzip2::FFI::Reader.open(nil) }
   end
 
+  def test_open_io_with_no_read_method
+    assert_raises(ArgumentError) { Bzip2::FFI::Reader.open(Object.new) }
+  end
+
   def test_open_block_io
     io = StringIO.new
     Bzip2::FFI::Reader.open(io, autoclose: true) do |reader|

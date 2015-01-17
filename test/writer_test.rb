@@ -222,6 +222,20 @@ class WriterTest < Minitest::Test
     assert_raises(ArgumentError) { Bzip2::FFI::Writer.open(nil) }
   end
 
+  def test_open_io_with_no_write_method
+    assert_raises(ArgumentError) { Bzip2::FFI::Writer.open(Object.new) }
+  end
+
+  def test_open_invalid_block_size
+    assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, block_size: 0) }
+    assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, block_size: 10) }
+  end
+
+  def test_open_invalid_work_factor
+    assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, work_factor: -1) }
+    assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, work_factor: 251) }
+  end
+
   def test_open_block_io
     io = DummyIO.new
     Bzip2::FFI::Writer.open(io, autoclose: true) do |writer|

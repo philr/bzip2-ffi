@@ -45,6 +45,33 @@ class WriterTest < Minitest::Test
     end
   end
 
+  def bunzip_and_compare(compressed, fixture_or_strings)
+    assert_bunzip2_successful(compressed)
+
+    uncompressed = compressed.chomp('.bz2')
+    assert(File.exist?(uncompressed))
+
+    if fixture_or_strings
+      if fixture_or_strings.kind_of?(Array)
+        File.open(uncompressed, 'rb') do |file|
+          fixture_or_strings.each do |string|
+            string = string.to_s
+            buffer = file.read(string.bytesize)
+            refute_nil(buffer)
+            assert_equal(string.bytesize, buffer.bytesize)
+            assert_equal(string.bytes.to_a, buffer.bytes.to_a)
+          end
+
+          assert_nil(file.read(1))
+        end
+      else
+        assert_files_identical(fixture_path(fixture_or_strings), uncompressed)
+      end
+    else
+      assert_equal(0, File.size(uncompressed))
+    end
+  end
+
   def bunzip_test(fixture_or_strings, options = {})  
     Dir.mktmpdir('bzip2-ffi-test') do |dir|      
       compressed = File.join(dir, "test.bz2")
@@ -60,30 +87,7 @@ class WriterTest < Minitest::Test
         end
       end
 
-      assert_bunzip2_successful(compressed)
-
-      uncompressed = File.join(dir, 'test')
-      assert(File.exist?(uncompressed))
-
-      if fixture_or_strings
-        if fixture_or_strings.kind_of?(Array)
-          File.open(uncompressed, 'rb') do |file|
-            fixture_or_strings.each do |string|
-              string = string.to_s
-              buffer = file.read(string.bytesize)
-              refute_nil(buffer)
-              assert_equal(string.bytesize, buffer.bytesize)
-              assert_equal(string.bytes.to_a, buffer.bytes.to_a)
-            end
-
-            assert_nil(file.read(1))
-          end
-        else
-          assert_files_identical(fixture_path(fixture_or_strings), uncompressed)
-        end
-      else        
-        assert_equal(0, File.size(uncompressed))
-      end
+      bunzip_and_compare(compressed, fixture_or_strings)
     end    
   end
 
@@ -103,7 +107,7 @@ class WriterTest < Minitest::Test
   def test_initialize_invalid_work_factor
     assert_raises(RangeError) { Bzip2::FFI::Writer.new(DummyIO.new, work_factor: -1) }
     assert_raises(RangeError) { Bzip2::FFI::Writer.new(DummyIO.new, work_factor: 251) }
-  end  
+  end
 
   def test_no_write
     bunzip_test(nil)
@@ -306,6 +310,59 @@ class WriterTest < Minitest::Test
       file = Bzip2::FFI::Writer.test_after_open_file_last_io
       refute_nil(file)
       assert(file.closed?)
+    end
+  end
+
+  def test_class_write_nil_io
+    assert_raises(ArgumentError) { Bzip2::FFI::Writer.write(nil, 'test') }
+  end
+
+  def test_class_write_io_with_no_write_method
+    assert_raises(ArgumentError) { Bzip2::FFI::Writer.write(Object.new, 'test') }
+  end
+
+  def test_class_write_invalid_block_size
+    assert_raises(RangeError) { Bzip2::FFI::Writer.write(DummyIO.new, 'test', block_size: 0) }
+    assert_raises(RangeError) { Bzip2::FFI::Writer.write(DummyIO.new, 'test', block_size: 10) }
+  end
+
+  def test_class_write_invalid_work_factor
+    assert_raises(RangeError) { Bzip2::FFI::Writer.write(DummyIO.new, 'test', work_factor: -1) }
+    assert_raises(RangeError) { Bzip2::FFI::Writer.write(DummyIO.new, 'test', work_factor: 251) }
+  end
+
+  def class_write_test(content)
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      compressed = File.join(dir, 'test.bz2')
+      result = yield compressed, content
+      assert_equal(content.bytesize, result)
+      bunzip_and_compare(compressed, [content])
+    end
+  end
+
+  def test_class_write_io
+    class_write_test('test_io') do |compressed, content|
+      File.open(compressed, 'wb') do |file|
+        Bzip2::FFI::Writer.write(file, content)
+      end
+    end
+  end
+
+  def test_class_write_path
+    class_write_test('test_path') do |compressed, content|
+      Bzip2::FFI::Writer.write(compressed, content)
+    end
+  end
+
+  def test_class_write_pathname
+    class_write_test('test_pathname') do |compressed, content|
+      Bzip2::FFI::Writer.write(Pathname.new(compressed), content)
+    end
+  end
+
+  def test_class_write_path_not_exist
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      assert_raises(Errno::ENOENT) { Bzip2::FFI::Writer.write(File.join(dir, 'test_dir', 'test_file'), 'test') }
     end
   end
 end

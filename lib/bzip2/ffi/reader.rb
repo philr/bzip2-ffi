@@ -34,6 +34,12 @@ module Bzip2
           end
         end
 
+        def read(io_or_path, options = {})
+          open(io_or_path, options) do |reader|
+            reader.read
+          end
+        end
+
         private
 
         def finalize(stream)

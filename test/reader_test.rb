@@ -440,4 +440,50 @@ class ReaderTest < Minitest::Test
     refute_nil(file)
     assert(file.closed?)
   end
+
+  def test_class_read_initialize_nil_io
+    assert_raises(ArgumentError) { Bzip2::FFI::Reader.read(nil) }
+  end
+
+  def test_class_read_io_with_no_read_method
+    assert_raises(ArgumentError) { Bzip2::FFI::Reader.read(Object.new) }
+  end
+
+  def class_read_test(content)
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      uncompressed = File.join(dir, 'test')
+      File.write(uncompressed, content)
+      assert_bzip2_successful(uncompressed)
+      compressed = File.join(dir, 'test.bz2')
+      result = yield compressed
+      assert_equal(content, result)
+      assert_same(Encoding::ASCII_8BIT, result.encoding)
+    end
+  end
+
+  def test_class_read_io
+    class_read_test('test_io') do |compressed|
+      File.open(compressed, 'rb') do |file|
+        Bzip2::FFI::Reader.read(file, {})
+      end
+    end
+  end
+
+  def test_class_read_path
+    class_read_test('test_path') do |compressed|
+      Bzip2::FFI::Reader.read(compressed)
+    end
+  end
+
+  def test_class_read_pathname
+    class_read_test('test_pathname') do |compressed|
+      Bzip2::FFI::Reader.read(Pathname.new(compressed))
+    end
+  end
+
+  def test_class_read_path_file_does_not_exist
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      assert_raises(Errno::ENOENT) { Bzip2::FFI::Reader.read(File.join(dir, 'test')) }
+    end
+  end
 end

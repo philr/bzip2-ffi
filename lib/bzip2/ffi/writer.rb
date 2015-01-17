@@ -32,6 +32,12 @@ module Bzip2
           end
         end
 
+        def write(io_or_path, string, options = {})
+          open(io_or_path, options) do |writer|
+            writer.write(string)
+          end
+        end
+
         private
 
         def finalize(stream)

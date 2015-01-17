@@ -52,7 +52,7 @@ class WriterTest < Minitest::Test
         if fixture_or_strings
           if fixture_or_strings.kind_of?(Array)
             fixture_or_strings.each do |string|
-              assert_equal(string.bytesize, writer.write(string))
+              assert_equal(string.to_s.bytesize, writer.write(string))
             end
           else
             write_fixture(writer, fixture_or_strings, options[:read_size])
@@ -69,6 +69,7 @@ class WriterTest < Minitest::Test
         if fixture_or_strings.kind_of?(Array)
           File.open(uncompressed, 'rb') do |file|
             fixture_or_strings.each do |string|
+              string = string.to_s
               buffer = file.read(string.bytesize)
               refute_nil(buffer)
               assert_equal(string.bytesize, buffer.bytesize)
@@ -134,6 +135,10 @@ class WriterTest < Minitest::Test
 
   def test_encoding_handling
     bunzip_test(['áÁçÇðÐéÉ'.encode(Encoding::UTF_8), 'áÁçÇðÐéÉ'.encode(Encoding::ISO_8859_1)])
+  end
+
+  def test_write_non_string
+    bunzip_test([:test, 42])
   end
 
   def test_block_size

@@ -313,6 +313,31 @@ class WriterTest < Minitest::Test
     end
   end
 
+  def test_open_existing_file_truncated
+    plain_content = 'This is not a bzip'
+    compressed_content = 'This is a bzip'
+
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      path = File.join(dir, 'test.bz2')
+
+      File.write(path, 'This is not a bzip')
+
+      File.open(path, 'rb') do |file|
+        assert_equal(plain_content, file.read(plain_content.bytesize))
+      end
+
+      Bzip2::FFI::Writer.open(path) do |writer|
+        writer.write(compressed_content)
+      end
+
+      File.open(path, 'rb') do |file|
+        refute_equal(plain_content, file.read(plain_content.bytesize))
+      end
+
+      bunzip_and_compare(path, [compressed_content])
+    end
+  end
+
   def test_open_proc_not_allowed
     assert_raises(ArgumentError) { Bzip2::FFI::Writer.open(-> { StringIO.new }) }
   end
@@ -377,6 +402,20 @@ class WriterTest < Minitest::Test
   def test_class_write_path_not_exist
     Dir.mktmpdir('bzip2-ffi-test') do |dir|
       assert_raises(Errno::ENOENT) { Bzip2::FFI::Writer.write(File.join(dir, 'test_dir', 'test_file'), 'test') }
+    end
+  end
+
+  def test_class_write_existing_file_truncated
+    plain_content = 'This is not a bzip'
+    compressed_content = 'This is a bzip'
+
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      path = File.join(dir, 'test.bz2')
+      File.write(path, 'This is not a bzip')
+      assert_equal(plain_content, File.read(path, plain_content.bytesize))
+      Bzip2::FFI::Writer.write(path, compressed_content)
+      refute_equal(plain_content, File.read(path, plain_content.bytesize))
+      bunzip_and_compare(path, [compressed_content])
     end
   end
 end

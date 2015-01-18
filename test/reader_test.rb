@@ -134,6 +134,14 @@ class ReaderTest < Minitest::Test
     end    
   end
 
+  def test_small
+    # Not trivial to check if the value passed has any effect. Just check that
+    # there are no failures.
+    [false, true].each do |small|
+      bzip_test('lorem.txt', reader_options: {small: small})
+    end
+  end
+
   def test_close_mid_read
     Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
       decompressed = reader.read(1)

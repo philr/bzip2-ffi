@@ -23,6 +23,8 @@ class Bzip2::FFI::BzStreamIO
     attr_accessor :test_after_open_file_raise_exception
     attr_accessor :test_after_open_file_last_io
 
+    private
+
     alias_method :default_after_open_file, :after_open_file
 
     def after_open_file(io)

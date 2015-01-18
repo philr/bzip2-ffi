@@ -30,6 +30,21 @@ module Bzip2
           end
         end
 
+        def open_bzip_file(path, mode)
+          io = File.open(path, mode)
+
+          begin
+            after_open_file(io)
+          rescue
+            io.close
+            raise
+          end
+
+          io
+        end
+
+        private
+
         def after_open_file(io)
           # JRuby 1.7.18 doesn't have a File#advise method (in any mode).
           if io.respond_to?(:advise)

@@ -13,19 +13,7 @@ module Bzip2
         def open(io_or_path, options = {})
           if io_or_path.kind_of?(String) || io_or_path.kind_of?(Pathname)
             options = options.merge(autoclose: true)
-            proc = -> do
-              io = File.open(io_or_path.to_s, 'rb')
-
-              begin
-                after_open_file(io)
-              rescue
-                io.close
-                raise
-              end
-
-              io
-            end
-
+            proc = -> { open_bzip_file(io_or_path.to_s, 'rb') }
             super(proc, options)
           elsif !io_or_path.kind_of?(Proc)
             super

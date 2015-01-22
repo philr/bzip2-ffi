@@ -10,8 +10,9 @@ Gem::Specification.new do |s|
   EOF
   s.author = 'Philip Ross'
   s.email = 'phil.ross@gmail.com'
+  s.homepage = 'https://github.com/philr/bzip2-ffi'
   s.license = 'MIT'
-  s.files = %w(bzip2-ffi.gemspec) +
+  s.files = %w(Gemfile LICENSE Rakefile bzip2-ffi.gemspec) +
             Dir['lib/**/*.rb'] +
             Dir['test/**/*.rb'] +
             Dir['test/fixtures/*']

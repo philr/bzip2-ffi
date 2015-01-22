@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.email = 'phil.ross@gmail.com'
   s.homepage = 'https://github.com/philr/bzip2-ffi'
   s.license = 'MIT'
-  s.files = %w(CHANGES.md Gemfile LICENSE README.md Rakefile bzip2-ffi.gemspec) +
+  s.files = %w(CHANGES.md Gemfile LICENSE README.md Rakefile bzip2-ffi.gemspec .yardopts) +
             Dir['lib/**/*.rb'] +
             Dir['test/**/*.rb'] +
             Dir['test/fixtures/*']

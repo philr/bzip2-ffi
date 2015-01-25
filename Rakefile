@@ -1,6 +1,5 @@
 require 'rubygems'
 require 'rubygems/package_task'
-require 'git'
 require 'rake/testtask'
 
 BASE_DIR = File.expand_path(File.dirname(__FILE__))
@@ -51,6 +50,7 @@ def recurse_chmod(dir)
 end
 
 task :tag do
+  require 'git'
   g = Git.init(BASE_DIR)
   g.add_tag("v#{spec.version}", annotate: true, message: "Tagging v#{spec.version}")
 end

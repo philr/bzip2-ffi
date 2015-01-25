@@ -4,7 +4,7 @@ gemspec
 
 group :development do
   gem 'rake', '~> 10.0'
-  gem 'git', '~> 1.2'
+  gem 'git', '~> 1.2', require: false
 end
 
 group :test do

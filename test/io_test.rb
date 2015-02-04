@@ -15,21 +15,6 @@ class IOTest < Minitest::Test
     end
   end
 
-  class DummyIOWithBinmode < DummyIO
-    def initialize
-      @binmode = false
-    end
-
-    def binmode
-      @binmode = true
-      self
-    end
-
-    def binmode?
-      @binmode
-    end
-  end
-
   class NoCloseIO
   end
 
@@ -144,10 +129,10 @@ class IOTest < Minitest::Test
   end
 
   def test_initialize_calls_binmode_on_io
-    dummy_io = DummyIOWithBinmode.new
-    assert_equal(false, dummy_io.binmode?)
+    dummy_io = Minitest::Mock.new
+    dummy_io.expect(:binmode, dummy_io)
     TestIO.new(dummy_io)
-    assert_equal(true, dummy_io.binmode?)
+    assert(dummy_io.verify)
   end
 
   def test_initialize_autoclose_default

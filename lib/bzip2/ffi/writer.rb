@@ -6,7 +6,8 @@ module Bzip2
       OUT_BUFFER_SIZE = 4096      
 
       class << self
-        public :new
+        # Use send to keep this hidden from YARD (visibility tag does not work).
+        send(:public, :new)
 
         def open(io_or_path, options = {})
           if io_or_path.kind_of?(String) || io_or_path.kind_of?(Pathname)

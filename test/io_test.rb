@@ -1,6 +1,6 @@
 require 'test_helper'
 
-class BzStreamIOTest < Minitest::Test
+class IOTest < Minitest::Test
   class DummyIO
     def initialize
       @closed = false
@@ -33,7 +33,7 @@ class BzStreamIOTest < Minitest::Test
   class NoCloseIO
   end
 
-  class TestIO < Bzip2::FFI::BzStreamIO
+  class TestIO < Bzip2::FFI::IO
     class << self
       public :new
       public :open

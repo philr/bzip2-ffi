@@ -2,7 +2,7 @@ require 'pathname'
 
 module Bzip2
   module FFI
-    class Writer < BzStreamIO
+    class Writer < IO
       OUT_BUFFER_SIZE = 4096      
 
       class << self

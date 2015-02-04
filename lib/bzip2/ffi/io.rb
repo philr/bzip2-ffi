@@ -1,6 +1,6 @@
 module Bzip2
   module FFI
-    class BzStreamIO
+    class IO
       class << self
         protected :new
 

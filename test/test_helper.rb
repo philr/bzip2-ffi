@@ -18,7 +18,7 @@ require 'fileutils'
 require 'minitest/autorun'
 require 'open3'
 
-class Bzip2::FFI::BzStreamIO
+class Bzip2::FFI::IO
   class << self
     attr_accessor :test_after_open_file_raise_exception
     attr_accessor :test_after_open_file_last_io

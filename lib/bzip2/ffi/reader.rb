@@ -3,7 +3,7 @@ require 'stringio'
 
 module Bzip2
   module FFI
-    class Reader < BzStreamIO
+    class Reader < IO
       READ_BUFFER_SIZE = 4096
       DEFAULT_DECOMPRESS_COUNT = 4096
 
@@ -160,7 +160,7 @@ module Bzip2
               # Attempt to move the input stream back by the amount that has
               # been over-read.
               if s[:avail_in] > 0 && io.respond_to?(:seek)
-                io.seek(-s[:avail_in], IO::SEEK_CUR) rescue IOError
+                io.seek(-s[:avail_in], ::IO::SEEK_CUR) rescue IOError
               end
 
               if @in_buffer

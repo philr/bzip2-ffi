@@ -161,20 +161,37 @@ class IOTest < Minitest::Test
   def test_check_error_not_error
     io = TestIO.new(DummyIO.new)
     
-    (0..1).each do |i|
+    (0..4).each do |i|
       assert_equal(i, io.check_error(i))
     end
   end
 
   def test_check_error_error
+    codes = {
+      Bzip2::FFI::Libbz2::BZ_SEQUENCE_ERROR => Bzip2::FFI::SequenceError,
+      Bzip2::FFI::Libbz2::BZ_PARAM_ERROR => Bzip2::FFI::ParamError,
+      Bzip2::FFI::Libbz2::BZ_MEM_ERROR => Bzip2::FFI::MemoryError,
+      Bzip2::FFI::Libbz2::BZ_DATA_ERROR => Bzip2::FFI::DataError,
+      Bzip2::FFI::Libbz2::BZ_DATA_ERROR_MAGIC => Bzip2::FFI::MagicDataError,
+      Bzip2::FFI::Libbz2::BZ_CONFIG_ERROR => Bzip2::FFI::ConfigError
+    }
+
     io = TestIO.new(DummyIO.new)
 
-    assert_raises(Bzip2::FFI::Error) { io.check_error(-1) }
+    codes.each do |code, error_class|
+      assert_raises(error_class) { io.check_error(code) }
+    end
+  end
 
-    begin
-      io.check_error(-1)
-    rescue Bzip2::FFI::Error => e
-      assert_equal(-1, e.error_code)
+  def test_check_error_unknown
+    io = TestIO.new(DummyIO.new)
+
+    # -6, -7 and -8 are codes that are only raised by the libbz2 high-level
+    # interface. Only the low-level interface is used by Bzip2::FFI.
+    # -10 is not defined by libbz2.
+    [-6, -7, -8, -10].each do |code|
+      error = assert_raises(Bzip2::FFI::UnexpectedError) { io.check_error(code) }
+      assert_includes(error.message, code.to_s)
     end
   end
 

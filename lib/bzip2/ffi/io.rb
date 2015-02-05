@@ -108,8 +108,26 @@ module Bzip2
       end      
 
       def check_error(res)
-        raise Error.new(res) if res < 0
-        res
+        return res if res >= 0
+
+        error_class = case res
+          when Libbz2::BZ_SEQUENCE_ERROR
+            SequenceError
+          when Libbz2::BZ_PARAM_ERROR
+            ParamError
+          when Libbz2::BZ_MEM_ERROR
+            MemoryError
+          when Libbz2::BZ_DATA_ERROR
+            DataError
+          when Libbz2::BZ_DATA_ERROR_MAGIC
+            MagicDataError
+          when Libbz2::BZ_CONFIG_ERROR
+            ConfigError
+          else
+            raise UnexpectedError.new(res)
+        end
+
+        raise error_class.new
       end      
     end
   end

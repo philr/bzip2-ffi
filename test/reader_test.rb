@@ -241,8 +241,7 @@ class ReaderTest < Minitest::Test
 
   def test_non_bzipped
     Bzip2::FFI::Reader.open(fixture_path('lorem.txt')) do |reader|
-      e = assert_raises(Bzip2::FFI::Error) { reader.read }
-      assert_equal(Bzip2::FFI::Libbz2::BZ_DATA_ERROR_MAGIC, e.error_code)
+      assert_raises(Bzip2::FFI::MagicDataError) { reader.read }
     end
   end
 
@@ -260,8 +259,7 @@ class ReaderTest < Minitest::Test
       partial.seek(0)
       
       Bzip2::FFI::Reader.open(partial) do |reader|
-        e = assert_raises(Bzip2::FFI::Error) { reader.read }
-        assert_equal(Bzip2::FFI::Libbz2::BZ_UNEXPECTED_EOF, e.error_code)
+        assert_raises(Bzip2::FFI::UnexpectedEofError) { reader.read }
       end
     end
   end
@@ -279,8 +277,7 @@ class ReaderTest < Minitest::Test
     corrupted.seek(0)
 
     Bzip2::FFI::Reader.open(corrupted) do |reader|
-      e = assert_raises(Bzip2::FFI::Error) { reader.read }
-      assert_equal(Bzip2::FFI::Libbz2::BZ_DATA_ERROR, e.error_code)
+      assert_raises(Bzip2::FFI::DataError) { reader.read }
     end
   end
 

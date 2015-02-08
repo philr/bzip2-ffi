@@ -1,7 +1,13 @@
 require 'test_helper'
 
 class ErrorTest < Minitest::Test
-  def test_initialize
+  def test_initialize_base_class
+    message = 'Dummy error message'
+    error = Bzip2::FFI::Error::Bzip2Error.new(message)
+    assert_same(message, error.message)
+  end
+
+  def test_initialize_sub_classes
     classes = [
       Bzip2::FFI::Error::SequenceError,
       Bzip2::FFI::Error::ParamError,

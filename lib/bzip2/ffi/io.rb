@@ -112,19 +112,19 @@ module Bzip2
 
         error_class = case res
           when Libbz2::BZ_SEQUENCE_ERROR
-            SequenceError
+            Error::SequenceError
           when Libbz2::BZ_PARAM_ERROR
-            ParamError
+            Error::ParamError
           when Libbz2::BZ_MEM_ERROR
-            MemoryError
+            Error::MemoryError
           when Libbz2::BZ_DATA_ERROR
-            DataError
+            Error::DataError
           when Libbz2::BZ_DATA_ERROR_MAGIC
-            MagicDataError
+            Error::MagicDataError
           when Libbz2::BZ_CONFIG_ERROR
-            ConfigError
+            Error::ConfigError
           else
-            raise UnexpectedError.new(res)
+            raise Error::UnexpectedError.new(res)
         end
 
         raise error_class.new

@@ -3,14 +3,14 @@ require 'test_helper'
 class ErrorTest < Minitest::Test
   def test_initialize
     classes = [
-      Bzip2::FFI::SequenceError,
-      Bzip2::FFI::ParamError,
-      Bzip2::FFI::MemoryError,
-      Bzip2::FFI::ParamError,
-      Bzip2::FFI::DataError,
-      Bzip2::FFI::MagicDataError,
-      Bzip2::FFI::ConfigError,
-      Bzip2::FFI::UnexpectedEofError
+      Bzip2::FFI::Error::SequenceError,
+      Bzip2::FFI::Error::ParamError,
+      Bzip2::FFI::Error::MemoryError,
+      Bzip2::FFI::Error::ParamError,
+      Bzip2::FFI::Error::DataError,
+      Bzip2::FFI::Error::MagicDataError,
+      Bzip2::FFI::Error::ConfigError,
+      Bzip2::FFI::Error::UnexpectedEofError
     ]
 
     classes.each do |c|
@@ -25,7 +25,7 @@ class ErrorTest < Minitest::Test
     # -10 is not defined by libbz2.
 
     [-6, -7, -8, -10].each do |code|
-      error = Bzip2::FFI::UnexpectedError.new(code)
+      error = Bzip2::FFI::Error::UnexpectedError.new(code)
       assert_includes(error.message, code.to_s)
     end
   end

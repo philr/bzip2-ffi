@@ -181,7 +181,7 @@ module Bzip2
             # No more input available and calling BZ2_bzDecompress didn't
             # advance the output. Raise an error.
             if @in_eof && prev_avail_out == s[:avail_out]
-              raise UnexpectedEofError.new
+              raise Error::UnexpectedEofError.new
             end
           end
 

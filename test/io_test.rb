@@ -168,12 +168,12 @@ class IOTest < Minitest::Test
 
   def test_check_error_error
     codes = {
-      Bzip2::FFI::Libbz2::BZ_SEQUENCE_ERROR => Bzip2::FFI::SequenceError,
-      Bzip2::FFI::Libbz2::BZ_PARAM_ERROR => Bzip2::FFI::ParamError,
-      Bzip2::FFI::Libbz2::BZ_MEM_ERROR => Bzip2::FFI::MemoryError,
-      Bzip2::FFI::Libbz2::BZ_DATA_ERROR => Bzip2::FFI::DataError,
-      Bzip2::FFI::Libbz2::BZ_DATA_ERROR_MAGIC => Bzip2::FFI::MagicDataError,
-      Bzip2::FFI::Libbz2::BZ_CONFIG_ERROR => Bzip2::FFI::ConfigError
+      Bzip2::FFI::Libbz2::BZ_SEQUENCE_ERROR => Bzip2::FFI::Error::SequenceError,
+      Bzip2::FFI::Libbz2::BZ_PARAM_ERROR => Bzip2::FFI::Error::ParamError,
+      Bzip2::FFI::Libbz2::BZ_MEM_ERROR => Bzip2::FFI::Error::MemoryError,
+      Bzip2::FFI::Libbz2::BZ_DATA_ERROR => Bzip2::FFI::Error::DataError,
+      Bzip2::FFI::Libbz2::BZ_DATA_ERROR_MAGIC => Bzip2::FFI::Error::MagicDataError,
+      Bzip2::FFI::Libbz2::BZ_CONFIG_ERROR => Bzip2::FFI::Error::ConfigError
     }
 
     io = TestIO.new(DummyIO.new)
@@ -190,7 +190,7 @@ class IOTest < Minitest::Test
     # interface. Only the low-level interface is used by Bzip2::FFI.
     # -10 is not defined by libbz2.
     [-6, -7, -8, -10].each do |code|
-      error = assert_raises(Bzip2::FFI::UnexpectedError) { io.check_error(code) }
+      error = assert_raises(Bzip2::FFI::Error::UnexpectedError) { io.check_error(code) }
       assert_includes(error.message, code.to_s)
     end
   end

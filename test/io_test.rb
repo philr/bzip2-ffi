@@ -183,7 +183,7 @@ class IOTest < Minitest::Test
     end
   end
 
-  def test_check_error_unknown
+  def test_check_error_unexpected
     io = TestIO.new(DummyIO.new)
 
     # -6, -7 and -8 are codes that are only raised by the libbz2 high-level

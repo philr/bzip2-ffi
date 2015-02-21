@@ -18,8 +18,9 @@ Gem::Specification.new do |s|
             Dir['test/fixtures/*']
   s.platform = Gem::Platform::RUBY
   s.require_path = 'lib'
-  s.rdoc_options << '--title' << 'Bzip2::FFI'
-  s.extra_rdoc_files = ['LICENSE']
+  s.rdoc_options << '--title' << 'Bzip2::FFI' <<
+                    '--main' << 'README.md'
+  s.extra_rdoc_files = ['CHANGES.md', 'LICENSE', 'README.md']
   s.required_ruby_version = '>= 1.9.3'
   s.add_runtime_dependency 'ffi', '~> 1.0'
   s.requirements << 'libbz2.(so|dll|dylib) available on the library search path'

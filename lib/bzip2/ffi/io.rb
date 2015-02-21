@@ -1,11 +1,27 @@
 module Bzip2
   module FFI
+    # Base class providing common functionality for the {Reader} and {Writer}
+    # classes.
+    #
+    # `Bzip2::FFI::IO` holds a reference to an underlying `IO`-like stream
+    # representing the bzip2-compressed data to be read from or written to.
     class IO
       class << self
         protected :new
 
         protected
-      
+
+        # If no block is provided, returns a new `IO`. If a block is provided,
+        # a new `IO` is created and yielded to the block. After the block has
+        # executed, the `IO` is closed and the result of the block is returned.
+        #
+        # If `io_or_proc` is a `Proc`, it is called to obtain an IO-like
+        # instance to pass to `new`. Otherwise `io_or_proc` is passed directly
+        # to `new`.
+        #
+        # @param io_or_proc [Object] An IO-like object or a `Proc` that returns
+        #                            an IO-like object when called.
+        # @param options [Hash] Options to pass to `new`.
         def open(io_or_proc, options = {})
           if io_or_proc.kind_of?(Proc)
             io = io_or_proc.call
@@ -30,6 +46,12 @@ module Bzip2
           end
         end
 
+        # Opens and returns a bzip `File` using the specified mode. The system
+        # is advised that the file will be accessed once sequentially.
+        #
+        # @param path [String] The path to open.
+        # @param mode [String] The file open mode to use.
+        # @return [File] An open `File` object for `path` opened using `mode`.
         def open_bzip_file(path, mode)
           io = File.open(path, mode)
 
@@ -45,6 +67,9 @@ module Bzip2
 
         private
 
+        # Advises the system that an `IO` will be accessed once sequentially.
+        #
+        # @param io [IO] An `IO` instance to advise.
         def after_open_file(io)
           # JRuby 1.7.18 doesn't have a File#advise method (in any mode).
           if io.respond_to?(:advise)
@@ -53,44 +78,102 @@ module Bzip2
           end
         end
       end
-    
+
+      # Returns `true` if the underlying compressed `IO` instance will be closed
+      # when this instance is closed, otherwise `false`.
+      #
+      # @return [Boolean] `true` if the underlying compressed IO instance will
+      #                   be closed when this instance is closed, otherwise
+      #                   `false`.
       def autoclose?
         @autoclose
       end
 
+      # Sets whether the underlying compressed `IO` instance should be closed
+      # when this instance is closed (`true`) or left open (`false`).
+      #
+      # @param autoclose [Boolean] `true` if the underlying compressed `IO`
+      #                            instance should be closed when this instance
+      #                            is closed, or `false` to leave it open.
       def autoclose=(autoclose)
         @autoclose = !!autoclose
       end
-      
+
+      # Returns `true` to indicate that this `Bzip2::FFI::IO` instance always
+      # operates in binary mode.
+      #
+      # @return [Boolean] Always `true`.
       def binmode?
         true
       end
 
+      # Puts this instance into binary mode.
+      #
+      # Note that `Bzip2::FFI::IO` and subclasses always operate in binary mode,
+      # so calling `binmode` has no effect.
+      #
+      # @return [IO] `self`.
       def binmode
         self
       end
 
+      # Closes this `IO` instance.
+      #
+      # If {#autoclose?} is true and the underlying compressed `IO` responds to
+      # `close`, it will also be closed.
+      #
+      # @return [NilClass] `nil`.
       def close
         @io.close if autoclose? && @io.respond_to?(:close)
         @stream = nil
       end
 
+      # Indicates whether this instance has been closed by calling {#close}.
+      #
+      # @return [Boolean] `true` if this instance has been closed, otherwise
+      #                   `false`.
       def closed?
         !@stream
       end
 
+      # Returns the `Encoding` object that represents the encoding of data
+      # prior to being compressed or after being decompressed.
+      #
+      # No character conversion is performed, so `external_encoding` always
+      # returns `Encoding::ASCII_8BIT` (also known as `Encoding::BINARY`).
+      #
+      # @return [Encoding] `Encoding::ASCII_8BIT`.
       def external_encoding
         Encoding::ASCII_8BIT
       end
 
+      # The internal encoding for character conversions.
+      #
+      # No character conversion is performed, so `internal_encoding` always
+      # returns `Encoding::ASCII_8BIT` (also known as `Encoding::BINARY`).
+      #
+      # @return [Encoding] `Encoding::ASCII_8BIT`.
       def internal_encoding
         Encoding::ASCII_8BIT
       end
       
       protected
 
+      # The underlying compressed `IO` instance.
       attr_reader :io
-      
+
+      # Initializes a new {Bzip2::FFI::IO} instance with an underlying
+      # compressed `IO` instance and `options` `Hash`.
+      #
+      # `binmode` is called on `io` if `io` responds to `binmode`.
+      #
+      # A single `:autoclose` option is supported. Set `:autoclose` to true
+      # to close the underlying compressed `IO` instance when {#close} is
+      # called.
+      #
+      # @param io [IO] An `IO`-like object that represents the compressed data.
+      # @param options [Hash] Optional parameters (:autoclose).
+      # @raise [ArgumentError] If `io` is nil.
       def initialize(io, options = {})
         raise ArgumentError, 'io is required' unless io
         
@@ -102,11 +185,25 @@ module Bzip2
         @stream = Libbz2::BzStream.new
       end
 
+      # Returns the {Libbz2::BzStream} instance being used to interface with
+      # libbz2.
+      #
+      # @return [Libbz2::BzStream] The {Libbz2::BzStream} instance being used
+      #                            to interface with libbz2.
+      # @raise [IOError] If {#close} has been called.
       def stream
         raise IOError, 'closed stream' unless @stream
         @stream
       end      
 
+      # Checks a return code from a libbz2 function. If it is greater than or
+      # equal to 0 (success), the return code is returned. If it is less than
+      # zero (an error), the appropriate {Bzip2::Bzip2Error} sub-class is
+      # raised.
+      #
+      # @param res [Integer] The result of a call to a libbz2 function.
+      # @return [Integer] `res` if `res` is greater than or equal to 0.
+      # @raise [Error::Bzip2Error] if `res` is less than 0.
       def check_error(res)
         return res if res >= 0
 

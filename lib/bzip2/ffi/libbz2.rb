@@ -2,8 +2,12 @@ require 'ffi'
 
 module Bzip2
   module FFI
-    # The libbzip2 low-level interface.
-    module Libbz2
+    # FFI bindings for the libbz2 low-level interface.
+    #
+    # See bzlib.h and http://bzip.org/docs.html.
+    #
+    # @private
+    module Libbz2 #:nodoc:
       extend ::FFI::Library
 
       ffi_lib ['bz2', 'libbz2.so.1', 'libbz2.dll']
@@ -24,11 +28,14 @@ module Bzip2
       BZ_DATA_ERROR_MAGIC = -5
       BZ_CONFIG_ERROR     = -9
 
+      # void *(*bzalloc)(void *,int,int);
       callback :bzalloc, [:pointer, :int, :int], :pointer
+
+      # void (*bzfree)(void *,void *);
       callback :bzfree, [:pointer, :pointer], :void
 
-      # bz_stream
-      class BzStream < ::FFI::Struct
+      # typedef struct { ... } bz_stream;
+      class BzStream < ::FFI::Struct #:nodoc:
         layout :next_in,       :pointer,
                :avail_in,      :uint,
                :total_in_lo32, :uint,
@@ -46,22 +53,22 @@ module Bzip2
                :opaque,         :pointer       
       end
 
-      # int BZ2_bzCompressInt(bz_stream* strm, int blockSize100k, int verbosity, int workFactor)
+      # int BZ2_bzCompressInt(bz_stream* strm, int blockSize100k, int verbosity, int workFactor);
       attach_function :BZ2_bzCompressInit, [BzStream.by_ref, :int, :int, :int], :int
 
-      # int BZ2_bzCompress (bz_stream* strm, int action)
+      # int BZ2_bzCompress (bz_stream* strm, int action);
       attach_function :BZ2_bzCompress, [BzStream.by_ref, :int], :int
 
-      # int BZ2_bzCompressEnd (bz_stream* strm)
+      # int BZ2_bzCompressEnd (bz_stream* strm);
       attach_function :BZ2_bzCompressEnd, [BzStream.by_ref], :int
       
-      # int BZ2_bzDecompressInit (bz_stream *strm, int verbosity, int small)
+      # int BZ2_bzDecompressInit (bz_stream *strm, int verbosity, int small);
       attach_function :BZ2_bzDecompressInit, [BzStream.by_ref, :int, :int], :int
 
-      # int BZ2_bzDecompress (bz_stream* strm)
+      # int BZ2_bzDecompress (bz_stream* strm);
       attach_function :BZ2_bzDecompress, [BzStream.by_ref], :int
 
-      # int BZ2_bzDecompressEnd (bz_stream *strm)
+      # int BZ2_bzDecompressEnd (bz_stream *strm);
       attach_function :BZ2_bzDecompressEnd, [BzStream.by_ref], :int
     end
   end

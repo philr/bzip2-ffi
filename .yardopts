@@ -1,3 +1,4 @@
+--markup=markdown
 --no-private
 lib/**/*.rb
 -

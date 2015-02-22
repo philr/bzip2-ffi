@@ -331,6 +331,16 @@ class IOTest < Minitest::Test
     assert_equal(42, res) 
   end
 
+  def test_open_block_closes
+    # Shouldn't raise an exception if the block closes the io.
+    res = TestIO.open(DummyIO.new) do |io|
+      io.close
+      :block_closed
+    end
+
+    assert_equal(:block_closed, res)
+  end
+
   def test_open_block_proc
     dummy_io = nil
 

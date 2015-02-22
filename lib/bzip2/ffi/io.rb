@@ -39,7 +39,7 @@ module Bzip2
             begin            
               yield bz_io
             ensure
-              bz_io.close
+              bz_io.close unless bz_io.closed?
             end
           else
             bz_io

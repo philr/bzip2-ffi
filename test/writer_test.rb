@@ -159,6 +159,24 @@ class WriterTest < Minitest::Test
     assert(sizes.last < sizes.first, 'compressed size with block_size = 1 is not less than compressed size with block_size = 9')
   end
 
+  def test_default_block_size
+    # The default block size should be 9. Check that the size of the compressed
+    # stream for the default block size is the same as the size when compressed
+    # with :block_size set to 9.
+
+    explicit_io = DummyIO.new
+    Bzip2::FFI::Writer.open(explicit_io, block_size: 9) do |writer|
+      write_fixture(writer, 'lorem.txt')
+    end
+
+    default_io = DummyIO.new
+    Bzip2::FFI::Writer.open(default_io) do |writer|
+      write_fixture(writer, 'lorem.txt')
+    end
+
+    assert_equal(explicit_io.written_bytes, default_io.written_bytes)
+  end
+
   def test_work_factor
     # Not trivial to check if the value passed has any effect. Just check that
     # there are no failures for values within the acceptable range.

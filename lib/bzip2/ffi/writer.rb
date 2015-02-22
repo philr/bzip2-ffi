@@ -71,7 +71,7 @@ module Bzip2
         #                   times the chosen figure. 9 gives the best
         #                   compression, but requires most memory. 1 gives the
         #                   worst compression, but uses least memory. If not
-        #                   specified, `:block_size` defaults to 1.
+        #                   specified, `:block_size` defaults to 9.
         # * `:work_factor` - Controls how the compression algorithm behaves
         #                    when presented with the worst case, highly
         #                    repetitive, input data. If compression runs into
@@ -135,7 +135,7 @@ module Bzip2
         #                   times the chosen figure. 9 gives the best
         #                   compression, but requires most memory. 1 gives the
         #                   worst compression, but uses least memory. If not
-        #                   specified, `:block_size` defaults to 1.
+        #                   specified, `:block_size` defaults to 9.
         # * `:work_factor` - Controls how the compression algorithm behaves
         #                    when presented with the worst case, highly
         #                    repetitive, input data. If compression runs into
@@ -210,7 +210,7 @@ module Bzip2
       #                   times the chosen figure. 9 gives the best
       #                   compression, but requires most memory. 1 gives the
       #                   worst compression, but uses least memory. If not
-      #                   specified, `:block_size` defaults to 1.
+      #                   specified, `:block_size` defaults to 9.
       # * `:work_factor` - Controls how the compression algorithm behaves
       #                    when presented with the worst case, highly
       #                    repetitive, input data. If compression runs into
@@ -242,7 +242,7 @@ module Bzip2
         super
         raise ArgumentError, 'io must respond to write' unless io.respond_to?(:write)
         
-        block_size = options[:block_size] || 1
+        block_size = options[:block_size] || 9
         work_factor = options[:work_factor] || 0
         
         raise RangeError, 'block_size must be >= 1 and <= 9' if block_size < 1 || block_size > 9

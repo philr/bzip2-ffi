@@ -271,9 +271,7 @@ module Bzip2
           raise ArgumentError 'length must be a non-negative integer or nil' if length < 0
 
           if length == 0
-            # Check the stream is still open (an exception will be raised if it
-            # is closed).
-            stream
+            check_closed
             return buffer || ''
           end
 

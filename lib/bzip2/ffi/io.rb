@@ -85,7 +85,9 @@ module Bzip2
       # @return [Boolean] `true` if the underlying compressed IO instance will
       #                   be closed when this instance is closed, otherwise
       #                   `false`.
+      # @raise [IOError] If this instance has been closed.
       def autoclose?
+        check_closed
         @autoclose
       end
 
@@ -95,7 +97,9 @@ module Bzip2
       # @param autoclose [Boolean] `true` if the underlying compressed `IO`
       #                            instance should be closed when this instance
       #                            is closed, or `false` to leave it open.
+      # @raise [IOError] If this instance has been closed.
       def autoclose=(autoclose)
+        check_closed
         @autoclose = !!autoclose
       end
 
@@ -103,7 +107,9 @@ module Bzip2
       # operates in binary mode.
       #
       # @return [Boolean] Always `true`.
+      # @raise [IOError] If this instance has been closed.
       def binmode?
+        check_closed
         true
       end
 
@@ -113,7 +119,9 @@ module Bzip2
       # so calling `binmode` has no effect.
       #
       # @return [IO] `self`.
+      # @raise [IOError] If this instance has been closed.
       def binmode
+        check_closed
         self
       end
 
@@ -123,7 +131,9 @@ module Bzip2
       # `close`, it will also be closed.
       #
       # @return [NilClass] `nil`.
+      # @raise [IOError] If this instance has been closed.
       def close
+        check_closed
         @io.close if autoclose? && @io.respond_to?(:close)
         @stream = nil
       end
@@ -143,7 +153,9 @@ module Bzip2
       # returns `Encoding::ASCII_8BIT` (also known as `Encoding::BINARY`).
       #
       # @return [Encoding] `Encoding::ASCII_8BIT`.
+      # @raise [IOError] If this instance has been closed.
       def external_encoding
+        check_closed
         Encoding::ASCII_8BIT
       end
 
@@ -153,7 +165,9 @@ module Bzip2
       # returns `Encoding::ASCII_8BIT` (also known as `Encoding::BINARY`).
       #
       # @return [Encoding] `Encoding::ASCII_8BIT`.
+      # @raise [IOError] If this instance has been closed.
       def internal_encoding
+        check_closed
         Encoding::ASCII_8BIT
       end
       
@@ -190,11 +204,18 @@ module Bzip2
       #
       # @return [Libbz2::BzStream] The {Libbz2::BzStream} instance being used
       #                            to interface with libbz2.
-      # @raise [IOError] If {#close} has been called.
+      # @raise [IOError] If this instance has been closed.
       def stream
-        raise IOError, 'closed stream' unless @stream
+        check_closed
         @stream
       end      
+
+      # Raises an `IOError` if {#close} has been called to close this {IO}.
+      #
+      # @raise [IOError] If this instance has been closed.
+      def check_closed
+        raise IOError, 'closed stream' if closed?
+      end
 
       # Checks a return code from a libbz2 function. If it is greater than or
       # equal to 0 (success), the return code is returned. If it is less than

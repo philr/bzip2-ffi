@@ -26,6 +26,7 @@ class IOTest < Minitest::Test
 
     public :io
     public :stream
+    public :check_closed
     public :check_error
 
     def initialize(io, options = {})
@@ -63,15 +64,39 @@ class IOTest < Minitest::Test
     assert_equal(false, io.autoclose?)
   end
 
+  def test_autoclose_get_when_closed
+    io = TestIO.new(DummyIO.new)
+    io.close
+    assert_raises(IOError) { io.autoclose? }
+  end
+
+  def test_autoclose_set_when_closed
+    io = TestIO.new(DummyIO.new)
+    io.close
+    assert_raises(IOError) { io.autoclose = true }
+  end
+
   def test_binmode?
     io = TestIO.new(DummyIO.new)
     assert_equal(true, io.binmode?)
+  end
+
+  def test_binmode_get_when_closed
+    io = TestIO.new(DummyIO.new)
+    io.close
+    assert_raises(IOError) { io.binmode? }
   end
 
   def test_binmode
     io = TestIO.new(DummyIO.new)
     assert_same(io, io.binmode)
     assert_equal(true, io.binmode?)
+  end
+
+  def test_binmode_set_when_closed
+    io = TestIO.new(DummyIO.new)
+    io.close
+    assert_raises(IOError) { io.binmode }
   end
 
   def test_close_without_autoclose
@@ -101,6 +126,12 @@ class IOTest < Minitest::Test
     assert_nil(io.close)
   end
 
+  def test_close_when_closed
+    io = TestIO.new(DummyIO.new)
+    io.close
+    assert_raises(IOError) { io.close }
+  end
+
   def test_closed
     io = TestIO.new(DummyIO.new)
     assert_equal(false, io.closed?)
@@ -113,9 +144,21 @@ class IOTest < Minitest::Test
     assert_equal(Encoding::ASCII_8BIT, io.external_encoding)
   end
 
+  def test_external_encoding_when_closed
+    io = TestIO.new(DummyIO.new)
+    io.close
+    assert_raises(IOError) { io.external_encoding }
+  end
+
   def test_internal_encoding
     io = TestIO.new(DummyIO.new)
     assert_equal(Encoding::ASCII_8BIT, io.internal_encoding)
+  end
+
+  def test_internal_encoding_when_closed
+    io = TestIO.new(DummyIO.new)
+    io.close
+    assert_raises(IOError) { io.internal_encoding }
   end
 
   def test_io
@@ -145,17 +188,29 @@ class IOTest < Minitest::Test
     assert_equal(true, io.autoclose?)
   end
 
-  def test_stream_open
+  def test_stream
     io = TestIO.new(DummyIO.new)
     s = io.stream
     refute_nil(s)
     assert_kind_of(Bzip2::FFI::Libbz2::BzStream, s)
   end
 
-  def test_stream_closed
+  def test_stream_when_closed
     io = TestIO.new(DummyIO.new)
     io.close
     assert_raises(IOError) { io.stream }
+  end
+
+  def test_check_closed_when_open
+    io = TestIO.new(DummyIO.new)
+    assert_nothing_raised { io.check_closed }
+  end
+
+  def test_check_closed_when_closed
+    io = TestIO.new(DummyIO.new)
+    io.close
+    e = assert_raises(IOError) { io.check_closed }
+    assert_equal('closed stream', e.message)
   end
 
   def test_check_error_not_error

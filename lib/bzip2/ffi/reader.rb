@@ -15,7 +15,7 @@ module Bzip2
     #       end
     #     end
     #
-    # Or:
+    # Alternatively, without passing a block to `open`:
     #
     #     reader = Bzip2::FFI::Reader.open(io_or_path)
     #     begin
@@ -35,8 +35,9 @@ module Bzip2
     # either a `String` or `Pathname`.
     #
     # No character conversion is performed on decompressed bytes. The {read} and
-    # {#read} methods return `String` instances with `encoding` set to
-    # `Encoding::ASCII_8BIT` (also known as `Encoding::BINARY`).
+    # {#read} methods return instances of `String` that represent the raw
+    # decompressed bytes, with `encoding` set to `Encoding::ASCII_8BIT` (also
+    # known as `Encoding::BINARY`).
     #
     # {Reader} will read a single bzip2 compressed structure from the given
     # stream or file. If the stream or file contains data beyond the end of
@@ -125,8 +126,9 @@ module Bzip2
         #              at about half the speed).
         #
         # No character conversion is performed on decompressed bytes. `read`
-        # returns an instance of `String` with the `encoding` set to
-        # `Encoding::ASCII_8BIT` (also known as `Encoding::BINARY`).
+        # returns a `String` that represents the raw decompressed bytes, with
+        # `encoding` set to `Encoding::ASCII_8BIT` (also known as
+        # `Encoding::BINARY`).
         #
         # If passing an `IO`-like object to `read` that has a `binmode` method,
         # `binmode` will be called before compressed data is read.
@@ -245,8 +247,9 @@ module Bzip2
       # is not empty beforehand.
       #
       # No character conversion is performed on decompressed bytes. `read`
-      # returns an instance of `String` with the `encoding` set to
-      # `Encoding::ASCII_8BIT` (also known as `Encoding::BINARY`).
+      # returns a `String` that represents the raw decompressed bytes, with
+      # `encoding` set to `Encoding::ASCII_8BIT` (also known as
+      # `Encoding::BINARY`).
       #
       # @param length [Integer] Must be a non-negative integer or `nil`. Set to
       #                         a positive integer to specify the maximum number

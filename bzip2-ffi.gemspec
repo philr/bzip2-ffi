@@ -5,8 +5,10 @@ Gem::Specification.new do |s|
   s.version = Bzip2::FFI::VERSION
   s.summary = 'Reads and writes bzip2 compressed data using FFI bindings for libbz2.'
   s.description = <<-EOF
-    Bzip2::FFI is a wrapper for libbz2 using FFI bindings. Bzip2 compressed data
-    can be read and written as a stream using the Reader and Writer classes.
+    Bzip2::FFI is a Ruby wrapper for libbz2 using FFI bindings.
+
+    The Bzip2::FFI Reader and Writer classes support reading and writing bzip2
+    compressed data as an IO-like stream.
   EOF
   s.author = 'Philip Ross'
   s.email = 'phil.ross@gmail.com'

@@ -89,25 +89,26 @@ module Bzip2
         #                    bzip2 v1.0.6). If not specified, `:work_factor`
         #                    defaults to 0.
         #
-        # If passing an `IO`-like object to `open` that has a `binmode` method,
-        # `binmode` will be called when the `Writer` is opened.
+        # If an `IO`-like object that has a `binmode` method is passed to
+        # `open`, `binmode` will be called on `io_or_path` before yielding to
+        # the block or returning.
         #
         # If a path to a file that already exists is passed to `open`, the file
         # will be truncated before writing.
         #
-        # @param io_or_path [Object] Either an `IO`-like object that has a
-        #                            `write` method or a file path as a `String`
-        #                            or `Pathname`.
+        # @param io_or_path [Object] Either an `IO`-like object with a `write`
+        #                            method or a file path as a `String` or
+        #                            `Pathname`.
         # @param options [Hash] Optional parameters (`:autoclose`, `:block_size`
         #                       and `:small`).
         # @return [Object] The opened `Writer` instance if no block is given, or
         #                  the result of the block if a block is given.
-        # @raise [ArgumentError] If `io_or_path` is _not_ either a `String`,
-        #                        `Pathname` or an `IO`-like object that
-        #                        has a `write` method.
+        # @raise [ArgumentError] If `io_or_path` is _not_ a `String`, `Pathname`
+        #                        or an `IO`-like object with a `write` method.
         # @raise [Errno::ENOENT] If the parent directory of the specified file
         #                        does not exist.
-        # @raise [IOError] If an error occurs initializing libbz2.
+        # @raise [Error::Bzip2Error] If an error occurs when initializing
+        #                            libbz2.
         def open(io_or_path, options = {})
           if io_or_path.kind_of?(String) || io_or_path.kind_of?(Pathname)
             options = options.merge(autoclose: true)
@@ -156,27 +157,26 @@ module Bzip2
         # No character conversion is performed. The raw bytes from `string` are
         # compressed (using the encoding of `string`).
         #
-        # If passing an `IO`-like object to `write` that has a `binmode` method,
-        # `binmode` will be called when the before compressed data
-        # is written.
+        # If an `IO`-like object that has a `binmode` method is passed to
+        # `write`, `binmode` will be called on `io_or_path` before any
+        # compressed data is written.
         #
         # The number of uncompressed bytes written is returned.
         #
-        # @param io_or_path [Object] Either an `IO`-like object that has a
-        #                            `write` method or a file path as a `String`
-        #                            or `Pathname`.
+        # @param io_or_path [Object] Either an `IO`-like object with a `write`
+        #                            method or a file path as a `String` or
+        #                            `Pathname`.
         # @param string [Object] The string to write (`to_s` will be called
         #                        before writing).
         # @param options [Hash] Optional parameters (`:autoclose`, `:block_size`
         #                       and `:small`).
         # @return [Integer] The number of uncompressed bytes written.
-        # @raise [ArgumentError] If `io_or_path` is _not_ either a `String`,
-        #                        `Pathname` or an `IO`-like object that
-        #                        has a `write` method.
+        # @raise [ArgumentError] If `io_or_path` is _not_ a `String`, `Pathname`
+        #                        or an `IO`-like object with a `write` method.
         # @raise [Errno::ENOENT] If the parent directory of the specified file
         #                        does not exist.
-        # @raise [IOError] If an error occurs whilst initializing libbz2 or
-        #                  compressing data.
+        # @raise [Error::Bzip2Error] If an error occurs when initializing
+        #                            libbz2 or compressing data.
         def write(io_or_path, string, options = {})
           open(io_or_path, options) do |writer|
             writer.write(string)
@@ -236,8 +236,11 @@ module Bzip2
       # @param io [Object] An `IO`-like object that has a `write` method.
       # @param options [Hash] Optional parameters (`:autoclose`, `:block_size`
       #                       and `:small`).
-      # @raise [ArgumentError] If `is` is `nil` or does not respond to `write`.
-      # @raise [IOError] If an error occurs initializing libbz2.
+      # @raise [ArgumentError] If `io` is `nil` or does not respond to `write`.
+      # @raise [RangeError] If `options[:block_size]` is less than 1 or greater
+      #                     than 9, or `options[:work_factor]` is less than 0 or
+      #                     greater than 250.
+      # @raise [Error::Bzip2Error] If an error occurs when initializing libbz2.
       def initialize(io, options = {})    
         super
         raise ArgumentError, 'io must respond to write' unless io.respond_to?(:write)
@@ -262,6 +265,7 @@ module Bzip2
       # compressed has been passed to `#write`.
       #
       # @return [NilType] `nil`.
+      # @raise [IOError] If the `Writer` has already been closed.
       def close
         s = stream
         flush_buffers(s, Libbz2::BZ_FINISH, Libbz2::BZ_STREAM_END)
@@ -282,7 +286,8 @@ module Bzip2
       # @param string [Object] The string to write (`to_s` will be called
       #                        before writing).
       # @return [Integer] The number of uncompressed bytes written.
-      # @raise [IOError] If an error occurs during compression.
+      # @raise [Error::Bzip2Error] If an error occurs during compression.
+      # @raise [IOError] If the `Writer` has been closed.
       def write(string)
         string = string.to_s
 
@@ -322,7 +327,9 @@ module Bzip2
       # Calling `flush` may result in a larger compressed output.
       #
       # @return [Writer] `self`.
-      # @raise [IOError] If an error occurs during the flush operation.
+      # @raise [Error::Bzip2Error] If an error occurs during the flush
+      #                            operation.
+      # @raise [IOError] If the `Writer` has been closed.
       def flush
         flush_buffers(stream, Libbz2::BZ_FLUSH, Libbz2::BZ_RUN_OK)
         self
@@ -337,6 +344,7 @@ module Bzip2
       # @param action [Integer] The action to pass to `BZ2_bzCompress`.
       # @param terminate_result [Integer] The result code that indicates when
       #                                   the action has been completed.
+      # @raise [Error::Bzip2Error] If `BZ2_bzCompress` reports an error.
       def flush_buffers(s, action, terminate_result)
         s[:next_in] = nil
         s[:avail_in] = 0

@@ -23,8 +23,8 @@ class ReaderTest < Minitest::Test
       if read_size
         loop do
           buffer = input.read(read_size)
-          
-          if use_outbuf          
+
+          if use_outbuf
             outbuf = 'outbuf'
             decompressed = reader.read(read_size, outbuf)
 
@@ -44,7 +44,7 @@ class ReaderTest < Minitest::Test
             assert_nil(decompressed)
             break
           end
-        end        
+        end
       else
         buffer = input.read
 
@@ -55,10 +55,10 @@ class ReaderTest < Minitest::Test
         else
           decompressed = reader.read
         end
-        
+
         refute_nil(decompressed)
         assert_same(Encoding::ASCII_8BIT, decompressed.encoding)
-        assert_equal(buffer, decompressed)      
+        assert_equal(buffer, decompressed)
       end
 
       assert_nil(reader.read(1))
@@ -74,9 +74,9 @@ class ReaderTest < Minitest::Test
       else
         FileUtils.touch(uncompressed)
       end
-      
+
       assert_bzip2_successful(uncompressed)
-    
+
       compressed = File.join(dir, "test.bz2")
       assert(File.exist?(compressed))
 
@@ -87,7 +87,7 @@ class ReaderTest < Minitest::Test
           assert_equal(0, reader.read.bytesize)
         end
       end
-    end    
+    end
   end
 
   def test_initialize_nil_io
@@ -107,7 +107,7 @@ class ReaderTest < Minitest::Test
       [false, true].each do |use_outbuf|
         bzip_test('lorem.txt', read_size: read_size, use_outbuf: use_outbuf)
       end
-    end    
+    end
   end
 
   def test_fixture_very_compressible
@@ -131,7 +131,7 @@ class ReaderTest < Minitest::Test
       [false, true].each do |use_outbuf|
         bzip_test('moon.tiff', read_size: read_size, use_outbuf: use_outbuf)
       end
-    end    
+    end
   end
 
   def test_small
@@ -257,7 +257,7 @@ class ReaderTest < Minitest::Test
       end
 
       partial.seek(0)
-      
+
       Bzip2::FFI::Reader.open(partial) do |reader|
         assert_raises(Bzip2::FFI::Error::UnexpectedEofError) { reader.read }
       end
@@ -269,7 +269,7 @@ class ReaderTest < Minitest::Test
 
     File.open(fixture_path('bzipped'), 'rb') do |file|
       corrupted.write(file.read)
-    end    
+    end
 
     corrupted.seek(4000)
     corrupted.write("\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0")
@@ -297,7 +297,7 @@ class ReaderTest < Minitest::Test
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
     end
-    
+
     assert_equal('Test', suffixed.read)
   end
 
@@ -320,7 +320,7 @@ class ReaderTest < Minitest::Test
       assert_equal(65670, reader.read.bytesize)
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
-    end    
+    end
 
     # For this input, the suffix will already have been consumed before the
     # end of the bzip2 stream is reached. There is no seek method, so it is not
@@ -347,7 +347,7 @@ class ReaderTest < Minitest::Test
       assert_equal(65670, reader.read.bytesize)
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
-    end    
+    end
 
     # For this input, the suffix will already have been consumed before the
     # end of the bzip2 stream is reached. There is no seek method, so it is not
@@ -418,7 +418,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_open_block_path_always_autoclosed
-    Bzip2::FFI::Reader.open(fixture_path('bzipped'), autoclose: false) do |reader|    
+    Bzip2::FFI::Reader.open(fixture_path('bzipped'), autoclose: false) do |reader|
       assert_equal(true, reader.autoclose?)
     end
   end

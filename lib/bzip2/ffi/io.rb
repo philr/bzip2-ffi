@@ -36,7 +36,7 @@ module Bzip2
           end
 
           if block_given?
-            begin            
+            begin
               yield bz_io
             ensure
               bz_io.close unless bz_io.closed?
@@ -168,7 +168,7 @@ module Bzip2
         check_closed
         Encoding::ASCII_8BIT
       end
-      
+
       protected
 
       # The underlying compressed `IO` instance.
@@ -188,12 +188,12 @@ module Bzip2
       # @raise [ArgumentError] If `io` is nil.
       def initialize(io, options = {})
         raise ArgumentError, 'io is required' unless io
-        
+
         @io = io
-        @io.binmode if @io.respond_to?(:binmode)        
+        @io.binmode if @io.respond_to?(:binmode)
 
         @autoclose = !!options[:autoclose]
-        
+
         @stream = Libbz2::BzStream.new
       end
 
@@ -206,7 +206,7 @@ module Bzip2
       def stream
         check_closed
         @stream
-      end      
+      end
 
       # Raises an `IOError` if {#close} has been called to close the {IO}.
       #
@@ -244,7 +244,7 @@ module Bzip2
         end
 
         raise error_class.new
-      end      
+      end
     end
   end
 end

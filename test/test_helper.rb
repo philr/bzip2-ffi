@@ -85,7 +85,7 @@ module TestHelper
 
   module Fixtures
     FIXTURES_DIR = File.join(BASE_DIR, 'fixtures')
-  
+
     def fixture_path(fixture)
       File.join(FIXTURES_DIR, fixture)
     end

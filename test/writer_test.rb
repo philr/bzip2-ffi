@@ -7,11 +7,11 @@ require 'tmpdir'
 class WriterTest < Minitest::Test
   class DummyIO
     attr_reader :written_bytes
-  
+
     def initialize
       @written_bytes = 0
     end
-  
+
     def write(string)
       @written_bytes += string.bytesize
     end
@@ -72,8 +72,8 @@ class WriterTest < Minitest::Test
     end
   end
 
-  def bunzip_test(fixture_or_strings, options = {})  
-    Dir.mktmpdir('bzip2-ffi-test') do |dir|      
+  def bunzip_test(fixture_or_strings, options = {})
+    Dir.mktmpdir('bzip2-ffi-test') do |dir|
       compressed = File.join(dir, "test.bz2")
       Bzip2::FFI::Writer.open(compressed, options[:writer_options] || {}) do |writer|
         if fixture_or_strings
@@ -88,7 +88,7 @@ class WriterTest < Minitest::Test
       end
 
       bunzip_and_compare(compressed, fixture_or_strings)
-    end    
+    end
   end
 
   def test_initialize_nil_io
@@ -134,7 +134,7 @@ class WriterTest < Minitest::Test
   def test_fixture_image
     [16, 1024, 16384, nil].each do |read_size|
       bunzip_test('moon.tiff', read_size: read_size)
-    end    
+    end
   end
 
   def test_encoding_handling
@@ -148,11 +148,11 @@ class WriterTest < Minitest::Test
   def test_block_size
     sizes = [1, 9].collect do |block_size|
       io = DummyIO.new
-      
+
       Bzip2::FFI::Writer.open(io, block_size: block_size) do |writer|
         write_fixture(writer, 'lorem.txt')
       end
-      
+
       io.written_bytes
     end
 
@@ -308,7 +308,7 @@ class WriterTest < Minitest::Test
 
   def test_open_block_path_always_autoclosed
     Dir.mktmpdir('bzip2-ffi-test') do |dir|
-      Bzip2::FFI::Writer.open(File.join(dir, 'test'), autoclose: false) do |writer|    
+      Bzip2::FFI::Writer.open(File.join(dir, 'test'), autoclose: false) do |writer|
         assert_equal(true, writer.autoclose?)
       end
     end

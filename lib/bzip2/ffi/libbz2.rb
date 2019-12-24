@@ -50,7 +50,7 @@ module Bzip2
 
                :bzalloc,        :bzalloc,
                :bzfree,         :bzfree,
-               :opaque,         :pointer       
+               :opaque,         :pointer
       end
 
       # int BZ2_bzCompressInt(bz_stream* strm, int blockSize100k, int verbosity, int workFactor);
@@ -61,7 +61,7 @@ module Bzip2
 
       # int BZ2_bzCompressEnd (bz_stream* strm);
       attach_function :BZ2_bzCompressEnd, [BzStream.by_ref], :int
-      
+
       # int BZ2_bzDecompressInit (bz_stream *strm, int verbosity, int small);
       attach_function :BZ2_bzDecompressInit, [BzStream.by_ref, :int, :int], :int
 

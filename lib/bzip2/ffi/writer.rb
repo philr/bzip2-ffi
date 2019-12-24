@@ -241,16 +241,16 @@ module Bzip2
       #                     than 9, or `options[:work_factor]` is less than 0 or
       #                     greater than 250.
       # @raise [Error::Bzip2Error] If an error occurs when initializing libbz2.
-      def initialize(io, options = {})    
+      def initialize(io, options = {})
         super
         raise ArgumentError, 'io must respond to write' unless io.respond_to?(:write)
-        
+
         block_size = options[:block_size] || 9
         work_factor = options[:work_factor] || 0
-        
+
         raise RangeError, 'block_size must be >= 1 and <= 9' if block_size < 1 || block_size > 9
         raise RangeError, 'work_factor must be >= 0 and <= 250' if work_factor < 0 || work_factor > 250
-        
+
         check_error(Libbz2::BZ2_bzCompressInit(stream, block_size, 0, work_factor))
 
         ObjectSpace.define_finalizer(self, self.class.send(:finalize, stream))
@@ -296,7 +296,7 @@ module Bzip2
         buffer = ::FFI::MemoryPointer.new(1, OUT_BUFFER_SIZE)
         begin
           next_in.write_bytes(string)
-          s[:next_in] = next_in        
+          s[:next_in] = next_in
           s[:avail_in] = next_in.size
 
           while s[:avail_in] > 0
@@ -367,7 +367,7 @@ module Bzip2
           buffer.free
           s[:next_out] = nil
         end
-      end     
+      end
     end
   end
 end

@@ -5,7 +5,7 @@ class IOTest < Minitest::Test
     def initialize
       @closed = false
     end
-    
+
     def close
       @closed = true
     end
@@ -138,7 +138,7 @@ class IOTest < Minitest::Test
     io.close
     assert_equal(true, io.closed?)
   end
-  
+
   def test_external_encoding
     io = TestIO.new(DummyIO.new)
     assert_equal(Encoding::ASCII_8BIT, io.external_encoding)
@@ -215,7 +215,7 @@ class IOTest < Minitest::Test
 
   def test_check_error_not_error
     io = TestIO.new(DummyIO.new)
-    
+
     (0..4).each do |i|
       assert_equal(i, io.check_error(i))
     end
@@ -304,14 +304,14 @@ class IOTest < Minitest::Test
     res = TestIO.open(dummy_io) do |io|
       assert_kind_of(TestIO, io)
       refute(io.closed?)
-      assert_equal(false, io.autoclose?) 
+      assert_equal(false, io.autoclose?)
       assert_same(dummy_io, io.io)
       copy_io = io
       42
     end
 
     assert(copy_io.closed?)
-    assert_equal(42, res)    
+    assert_equal(42, res)
   end
 
   def test_open_block_options
@@ -321,14 +321,14 @@ class IOTest < Minitest::Test
     res = TestIO.open(dummy_io, autoclose: true) do |io|
       assert_kind_of(TestIO, io)
       refute(io.closed?)
-      assert_equal(true, io.autoclose?) 
+      assert_equal(true, io.autoclose?)
       assert_same(dummy_io, io.io)
       copy_io = io
       42
     end
 
     assert(copy_io.closed?)
-    assert_equal(42, res) 
+    assert_equal(42, res)
   end
 
   def test_open_block_closes

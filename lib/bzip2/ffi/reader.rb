@@ -217,15 +217,15 @@ module Bzip2
         unless @out_eof
           decompress_end(s)
         end
-      
+
         s[:next_in] = nil
         s[:next_out] = nil
-        
+
         if @in_buffer
           @in_buffer.free
           @in_buffer = nil
         end
-        
+
         super
       end
 
@@ -283,7 +283,7 @@ module Bzip2
           end
 
           decompressed = decompress(length)
-          
+
           return nil unless decompressed
           buffer ? buffer << decompressed : decompressed
         else
@@ -292,11 +292,11 @@ module Bzip2
           # StringIO#binmode is a no-op, but call in case it is implemented in
           # future versions.
           result.binmode
-          
+
           result.set_encoding(Encoding::ASCII_8BIT)
 
           loop do
-            decompressed = decompress(DEFAULT_DECOMPRESS_COUNT)            
+            decompressed = decompress(DEFAULT_DECOMPRESS_COUNT)
             break unless decompressed
             result.write(decompressed)
             break if decompressed.bytesize < DEFAULT_DECOMPRESS_COUNT
@@ -346,7 +346,7 @@ module Bzip2
             end
 
             prev_avail_out = s[:avail_out]
-            
+
             res = Libbz2::BZ2_bzDecompress(s)
 
             if s[:avail_in] == 0 && @in_buffer
@@ -359,7 +359,7 @@ module Bzip2
 
             if res == Libbz2::BZ_STREAM_END
               # The input could contain data after the end of the bzip2 stream.
-              # 
+              #
               # s[:avail_in] will contain the number of bytes that have been
               # read from io, but not been consumed by BZ2_bzDecompress.
               #
@@ -376,7 +376,7 @@ module Bzip2
               end
 
               decompress_end(s)
-              
+
               @out_eof = true
               break
             end
@@ -391,7 +391,7 @@ module Bzip2
           end
 
           result = out_buffer.read_bytes(out_buffer.size - s[:avail_out])
-        ensure            
+        ensure
           out_buffer.free
           s[:next_out] = nil
           s[:avail_out] = 0
@@ -401,7 +401,7 @@ module Bzip2
           nil
         else
           result
-        end        
+        end
       end
 
       # Calls BZ2_bzDecompressEnd to release memeory associated with the

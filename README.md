@@ -22,7 +22,7 @@ To add Bzip2::FFI as a Bundler dependency, add the following line to your
 
 ## Compatibility ##
 
-Bzip2::FFI is tested on Ruby MRI 1.9.3+, JRuby 1.7+ and Rubinius 2+.
+Bzip2::FFI is tested on Ruby MRI 1.9.3+ and JRuby 1.7+.
 
 
 ## Runtime Dependencies ##

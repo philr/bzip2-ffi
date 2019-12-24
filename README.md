@@ -46,9 +46,8 @@ Suitable builds of `libbz2.dll` are available from the
 Download the DLL only package that matches your Ruby installation (x86 or x64)
 and extract to your `ruby\bin` directory.
 
-Builds from the bzip2-windows project depend on the Visual Studio 2013 C Runtime
-Library (msvcr120.dll). This can be installed using the
-[Visual C++ Redistributable Packages for Visual Studio 2013 installer](http://www.microsoft.com/en-gb/download/details.aspx?id=40784).
+Builds from the bzip2-windows project depend on the Visual Studio C Runtime
+Library. Links to the installer can be found on the bzip2-windows release page.
 
 
 ## Usage ##

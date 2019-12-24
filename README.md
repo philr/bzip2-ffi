@@ -1,6 +1,6 @@
 # Bzip2::FFI #
 
-[![Gem Version](https://badge.fury.io/rb/bzip2-ffi.svg)](http://badge.fury.io/rb/bzip2-ffi) [![Build Status](https://travis-ci.org/philr/bzip2-ffi.svg?branch=master)](https://travis-ci.org/philr/bzip2-ffi) [![Coverage Status](https://coveralls.io/repos/philr/bzip2-ffi/badge.svg?branch=master)](https://coveralls.io/r/philr/bzip2-ffi?branch=master)
+[![Gem Version](https://badge.fury.io/rb/bzip2-ffi.svg)](https://badge.fury.io/rb/bzip2-ffi) [![Build Status](https://travis-ci.org/philr/bzip2-ffi.svg?branch=master)](https://travis-ci.org/philr/bzip2-ffi) [![Coverage Status](https://coveralls.io/repos/philr/bzip2-ffi/badge.svg?branch=master)](https://coveralls.io/r/philr/bzip2-ffi?branch=master)
 
 Bzip2::FFI is a Ruby wrapper for libbz2 using FFI bindings.
 
@@ -128,7 +128,7 @@ ASCII-8BIT (BINARY) encoding representing the raw decompressed bytes.
 ## Documentation ##
 
 Documentation for Bzip2::FFI is available on
-[RubyDoc.info](http://www.rubydoc.info/gems/bzip2-ffi).
+[RubyDoc.info](https://www.rubydoc.info/gems/bzip2-ffi).
 
 
 ## License ##

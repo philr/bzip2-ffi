@@ -18,11 +18,9 @@ group :test do
 
 
   # json is a dependency of simplecov. Version 2.3.0 is declared as compatible
-  # with Ruby >= 1.9, but actually fails with a syntax error:
-  # https://travis-ci.org/tzinfo/tzinfo/jobs/625092293#L605
+  # with Ruby >= 1.9, but actually fails with a syntax error.
   #
-  # It also fails to build the native extension with Rubinius:
-  # https://travis-ci.org/tzinfo/tzinfo/jobs/625092305#L1310
+  # The native extension also fails to build with Rubinius.
   #
   # Limit to earlier versions on Ruby 1.9.
   gem 'json', '< 2.3.0', require: false if RUBY_VERSION < '2.0' || RUBY_ENGINE == 'rbx'

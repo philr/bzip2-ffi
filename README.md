@@ -1,6 +1,6 @@
 # Bzip2::FFI #
 
-[![Gem Version](https://badge.fury.io/rb/bzip2-ffi.svg)](https://badge.fury.io/rb/bzip2-ffi) [![Build Status](https://travis-ci.org/philr/bzip2-ffi.svg?branch=master)](https://travis-ci.org/philr/bzip2-ffi) [![Coverage Status](https://coveralls.io/repos/philr/bzip2-ffi/badge.svg?branch=master)](https://coveralls.io/r/philr/bzip2-ffi?branch=master)
+[![RubyGems](https://img.shields.io/gem/v/bzip2-ffi?logo=rubygems&label=Gem)](https://rubygems.org/gems/bzip2-ffi) [![Tests](https://github.com/philr/bzip2-ffi/workflows/Tests/badge.svg?branch=master&event=push)](https://github.com/philr/bzip2-ffi/actions?query=workflow%3ATests+branch%3Amaster+event%3Apush) [![Coverage Status](https://img.shields.io/coveralls/github/philr/bzip2-ffi/master?label=Coverage&logo=Coveralls)](https://coveralls.io/github/philr/bzip2-ffi?branch=master)
 
 Bzip2::FFI is a Ruby wrapper for libbz2 using FFI bindings.
 

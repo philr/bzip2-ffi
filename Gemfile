@@ -34,4 +34,12 @@ group :test do
   elsif RUBY_VERSION < '2.1' && RUBY_PLATFORM =~ /mingw/
     gem 'json', '< 2.5.0'
   end
+
+  # ffi 1.9.15 is declared as compatible with Ruby >= 1.8.7, but doesn't compile
+  # on Ruby 1.9.3 on Windows.
+  #
+  # Limit to earlier compatible versions.
+  if RUBY_VERSION < '2.0' && RUBY_PLATFORM =~ /mingw/
+    gem 'ffi', '< 1.9.0'
+  end
 end

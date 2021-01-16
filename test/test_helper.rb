@@ -74,12 +74,20 @@ module TestHelper
     end
 
     def assert_bzip2_command_successful(*arguments)
-      out, err, status = Open3.capture3(*(['bzip2'] + arguments))
+      command_with_arguments = ['bzip2'] + arguments
+      out, err, status = Open3.capture3(*command_with_arguments)
 
       args_string = arguments.collect {|a| "'#{a}'" }.join(' ')
       assert(err == '', "`bzip2 #{args_string}` returned error: #{err}")
       assert(out == '', "`bzip2 #{args_string}` returned output: #{out}")
-      assert(status.exitstatus == 0, "`bzip2 #{args_string}` exit status was non-zero")
+
+      # Ruby 1.9.3 on Windows intermittently returns a nil status. Assume that
+      # the process completed successfully.
+      if status
+        assert(status.exitstatus == 0, "`bzip2 #{args_string}` exit status was non-zero")
+      else
+        puts "`#{command_with_arguments.join(' ')}` command status was nil"
+      end
     end
   end
 

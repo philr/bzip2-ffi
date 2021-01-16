@@ -108,7 +108,7 @@ Alternatively, without passing a block to `open`:
       reader.close
     end
 
-An entire bzip2 structure can be read and decompressed in a single step:
+All the available bzipped data can be read and decompressed in a single step:
 
     uncompressed = Bzip2::FFI::Reader.read(io_or_path)
 

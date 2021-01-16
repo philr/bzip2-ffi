@@ -26,7 +26,7 @@ module Bzip2
     #       reader.close
     #     end
     #
-    # An entire bzip2 structure can be read in a single step using {read}:
+    # All the available bzipped data can be read in a single step using {read}:
     #
     #     uncompressed = Bzip2::FFI::Reader.read(io_or_path)
     #
@@ -80,6 +80,11 @@ module Bzip2
         #
         # * `:autoclose` - When passing an `IO`-like object, set to `true` to
         #                  close the `IO` when the `Reader` instance is closed.
+        # * `:first_only` - Bzip2 files can contain multiple consecutive
+        #                   compressed strctures. Normally all the structures
+        #                   will be decompressed with the decompressed bytes
+        #                   concatenated. Set to `true` to only read the first
+        #                   structure.
         # * `:small` - Set to `true` to use an alternative decompression
         #              algorithm that uses less memory, but at the cost of
         #              decompressing more slowly (roughly 2,300 kB less memory
@@ -123,6 +128,11 @@ module Bzip2
         # * `:autoclose` - When passing an `IO`-like object, set to `true` to
         #                  close the `IO` when the compressed data has been
         #                  read.
+        # * `:first_only` - Bzip2 files can contain multiple consecutive
+        #                   compressed strctures. Normally all the structures
+        #                   will be decompressed with the decompressed bytes
+        #                   concatenated. Set to `true` to only read the first
+        #                   structure.
         # * `:small` - Set to `true` to use an alternative decompression
         #              algorithm that uses less memory, but at the cost of
         #              decompressing more slowly (roughly 2,300 kB less memory
@@ -140,7 +150,8 @@ module Bzip2
         # @param io_or_path [Object] Either an `IO`-like object with a `read`
         #                            method or a file path as a `String` or
         #                            `Pathname`.
-        # @param options [Hash] Optional parameters (`:autoclose` and `:small`).
+        # @param options [Hash] Optional parameters (`:autoclose`, `:first_only`
+        #                       and `:small`).
         # @return [String] The decompressed data.
         # @raise [ArgumentError] If `io_or_path` is _not_ a `String`, `Pathname`
         #                        or an `IO`-like object with a `read` method.
@@ -174,6 +185,11 @@ module Bzip2
       #
       # * `:autoclose` - Set to `true` to close `io` when the `Reader` instance
       #                  is closed.
+      # * `:first_only` - Bzip2 files can contain multiple consecutive
+      #                   compressed strctures. Normally all the structures will
+      #                   be decompressed with the decompressed bytes
+      #                   concatenated. Set to `true` to only read the first
+      #                   structure.
       # * `:small` - Set to `true` to use an alternative decompression
       #              algorithm that uses less memory, but at the cost of
       #              decompressing more slowly (roughly 2,300 kB less memory
@@ -185,22 +201,24 @@ module Bzip2
       # method.
       #
       # @param io [Object] An `IO`-like object with a `read` method.
-      # @param options [Hash] Optional parameters (`:autoclose` and `:small`).
+      # @param options [Hash] Optional parameters (`:autoclose`, `:first_only`
+      #                       and `:small`).
       # @raise [ArgumentError] If `io` is `nil` or does not respond to `read`.
       # @raise [Error::Bzip2Error] If an error occurs when initializing libbz2.
       def initialize(io, options = {})
         super
         raise ArgumentError, 'io must respond to read' unless io.respond_to?(:read)
 
-        small = options[:small]
+        @first_only = options[:first_only]
+        @small = options[:small] ? 1 : 0
 
-        @in_eof = false
         @out_eof = false
         @in_buffer = nil
+        @structure_number = 1
+        @structure_start_pos = 0
+        @pos = 0
 
-        check_error(Libbz2::BZ2_bzDecompressInit(stream, 0, small ? 1 : 0))
-
-        ObjectSpace.define_finalizer(self, self.class.send(:finalize, stream))
+        decompress_init(stream)
       end
 
       # Ends decompression and closes the {Reader}.
@@ -323,6 +341,7 @@ module Bzip2
         s = stream
         return nil if @out_eof
 
+        in_eof = false
         out_buffer = ::FFI::MemoryPointer.new(1, count)
         begin
           s[:next_out] = out_buffer
@@ -331,18 +350,26 @@ module Bzip2
           # Decompress data until count bytes have been read, or the end of
           # the stream is reached.
           loop do
-            if s[:avail_in] == 0 && !@in_eof
+            if s[:avail_in] == 0 && !in_eof
               bytes = io.read(READ_BUFFER_SIZE)
 
               if bytes && bytes.bytesize > 0
-                @in_eof = bytes.bytesize < READ_BUFFER_SIZE
+                @pos += bytes.bytesize
+                in_eof = bytes.bytesize < READ_BUFFER_SIZE
                 @in_buffer = ::FFI::MemoryPointer.new(1, bytes.bytesize)
                 @in_buffer.write_bytes(bytes)
                 s[:next_in] = @in_buffer
                 s[:avail_in] = @in_buffer.size
               else
-                @in_eof = true
+                in_eof = true
               end
+            end
+
+            # Reached the end of input without reading anything in the current
+            # stream. No more data to process.
+            if @pos == @structure_start_pos
+              @out_eof = true
+              break
             end
 
             prev_avail_out = s[:avail_out]
@@ -355,39 +382,47 @@ module Bzip2
               @in_buffer = nil
             end
 
-            check_error(res)
-
-            if res == Libbz2::BZ_STREAM_END
-              # The input could contain data after the end of the bzip2 stream.
-              #
-              # s[:avail_in] will contain the number of bytes that have been
-              # read from io, but not been consumed by BZ2_bzDecompress.
+            if @structure_number > 1 && res == Libbz2::BZ_DATA_ERROR_MAGIC
+              # Found something other than the bzip2 magic bytes after the end
+              # of a bzip2 structure.
               #
               # Attempt to move the input stream back by the amount that has
               # been over-read.
-              if s[:avail_in] > 0 && io.respond_to?(:seek)
-                io.seek(-s[:avail_in], ::IO::SEEK_CUR) rescue IOError
-              end
-
-              if @in_buffer
-                s[:next_in] = nil
-                @in_buffer.free
-                @in_buffer = nil
-              end
-
+              attempt_seek_to_structure_start
               decompress_end(s)
-
               @out_eof = true
               break
             end
 
-            break if s[:avail_out] == 0
+            check_error(res)
 
-            # No more input available and calling BZ2_bzDecompress didn't
-            # advance the output. Raise an error.
-            if @in_eof && prev_avail_out == s[:avail_out]
-              raise Error::UnexpectedEofError.new
+            if res == Libbz2::BZ_STREAM_END
+              decompress_end(s)
+
+              if (s[:avail_in] > 0 || !in_eof) && !@first_only
+                # Re-initialize to read a second bzip2 structure if there is
+                # still input available and not restricting to the first stream.
+                @structure_number += 1
+                @structure_start_pos = @pos - s[:avail_in]
+                decompress_init(s)
+              else
+                # May have already read data after the end of the first bzip2
+                # structure
+                attempt_seek_to_structure_start if @first_only
+                @out_eof = true
+                break
+              end
+            else
+              # No more input available and calling BZ2_bzDecompress didn't
+              # advance the output. Raise an error.
+              if in_eof && s[:avail_in] == 0 && prev_avail_out == s[:avail_out]
+                decompress_end(s)
+                @out_eof = true
+                raise Error::UnexpectedEofError.new
+              end
             end
+
+            break if s[:avail_out] == 0
           end
 
           result = out_buffer.read_bytes(out_buffer.size - s[:avail_out])
@@ -402,6 +437,35 @@ module Bzip2
         else
           result
         end
+      end
+
+      # Attempts to reposition the compressed stream to the start of the
+      # current structure. Used when BZ2_bzDecompress has read beyond the end of
+      # a bzip2 structure.
+      def attempt_seek_to_structure_start
+        if io.respond_to?(:seek)
+          diff = @structure_start_pos - @pos
+          if diff < 0
+            begin
+              io.seek(diff, ::IO::SEEK_CUR)
+              @pos += diff
+            rescue IOError
+            end
+          end
+        end
+      end
+
+      # Calls BZ2_bzDecompressInit to initialize the decompression stream `s`.
+      #
+      # Defines a finalizer to ensure that the memory associated with the stream
+      # is deallocated.
+      #
+      # @param s [Libbz2::BzStream] The stream to initialize decompression for.
+      # @raise [Error::Bzip2Error] If `BZ2_bzDecompressInit` reports an error.
+      def decompress_init(s)
+        check_error(Libbz2::BZ2_bzDecompressInit(s, 0, @small))
+
+        ObjectSpace.define_finalizer(self, self.class.send(:finalize, s))
       end
 
       # Calls BZ2_bzDecompressEnd to release memory associated with the

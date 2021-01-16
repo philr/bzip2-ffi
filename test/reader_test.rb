@@ -9,6 +9,22 @@ class ReaderTest < Minitest::Test
     undef_method :seek
   end
 
+  class StringIOWithSeekCount < StringIO
+    def seek_count
+      instance_variable_defined?(:@seek_count) ? @seek_count : 0
+    end
+
+    def seek(amount, whence = IO::SEEK_SET)
+      if instance_variable_defined?(:@seek_count)
+        @seek_count += 1
+      else
+        @seek_count = 1
+      end
+
+      super
+    end
+  end
+
   def setup
     Bzip2::FFI::Reader.test_after_open_file_raise_exception = false
   end
@@ -18,11 +34,13 @@ class ReaderTest < Minitest::Test
     Bzip2::FFI::Reader.test_after_open_file_last_io = nil
   end
 
-  def compare_fixture(reader, fixture, read_size = nil, use_outbuf = nil)
+  def compare_fixture(reader, fixture, read_size = nil, use_outbuf = nil, limit = nil)
     File.open(fixture_path(fixture), 'rb') do |input|
       if read_size
+        count = 0
         loop do
-          buffer = input.read(read_size)
+          next_read_size = limit ? [limit - count, read_size].min : read_size
+          buffer = input.read(next_read_size)
 
           if use_outbuf
             outbuf = 'outbuf'
@@ -38,8 +56,11 @@ class ReaderTest < Minitest::Test
           end
 
           if buffer
+            refute_nil(decompressed)
             assert_same(Encoding::ASCII_8BIT, decompressed.encoding)
             assert_equal(buffer, decompressed)
+            count += buffer.bytesize
+            break if limit && count >= limit
           else
             assert_nil(decompressed)
             break
@@ -47,6 +68,7 @@ class ReaderTest < Minitest::Test
         end
       else
         buffer = input.read
+        buffer = buffer[0, limit] if limit
 
         if use_outbuf
           outbuf = 'outbuf'
@@ -68,21 +90,55 @@ class ReaderTest < Minitest::Test
 
   def bzip_test(fixture, options = {})
     Dir.mktmpdir('bzip2-ffi-test') do |dir|
+      split_length = options[:split_length]
+      split_files = nil
       uncompressed = File.join(dir, 'test')
       if fixture
-        FileUtils.cp(fixture_path(fixture), uncompressed)
+        if split_length && split_length > 0
+          File.open(fixture_path(fixture), 'rb') do |source|
+            split_files = 0
+
+            loop do
+              buffer = source.read(split_length)
+              buffer = '' if !buffer && split_files == 0
+              break unless buffer
+
+              split_files += 1
+              File.open("#{uncompressed}.#{split_files}", 'wb') do |target|
+                target.write(buffer)
+              end
+            end
+          end
+        else
+          FileUtils.cp(fixture_path(fixture), uncompressed)
+        end
       else
         FileUtils.touch(uncompressed)
       end
 
-      assert_bzip2_successful(uncompressed)
+      compressed = "#{uncompressed}.bz2"
 
-      compressed = File.join(dir, "test.bz2")
+      if split_files
+        File.open(compressed, 'wb') do |target|
+          1.upto(split_files) do |i|
+            split_file = "#{uncompressed}.#{i}"
+            assert_bzip2_successful(split_file)
+            File.open("#{split_file}.bz2", 'rb') do |source|
+              target.write(source.read)
+            end
+          end
+        end
+      else
+        assert_bzip2_successful(uncompressed)
+      end
+
       assert(File.exist?(compressed))
 
-      Bzip2::FFI::Reader.open(compressed, options[:reader_options] || {}) do |reader|
+      reader_options = options[:reader_options] || {}
+
+      Bzip2::FFI::Reader.open(compressed, reader_options) do |reader|
         if fixture
-          compare_fixture(reader, fixture, options[:read_size], options[:use_outbuf])
+          compare_fixture(reader, fixture, options[:read_size], options[:use_outbuf], reader_options[:first_only] ? split_length : nil)
         else
           assert_equal(0, reader.read.bytesize)
         end
@@ -139,6 +195,18 @@ class ReaderTest < Minitest::Test
     # there are no failures.
     [false, true].each do |small|
       bzip_test('lorem.txt', reader_options: {small: small})
+    end
+  end
+
+  def test_multiple_bzip2_structures
+    [16, 1024, 16384, File.size(fixture_path('lorem.txt')), nil].each do |read_size|
+      [false, true].each do |use_outbuf|
+        [16383, 16384, 32767, 32768].each do |split_length|
+          [false, true].each do |first_only|
+            bzip_test('lorem.txt', read_size: read_size, use_outbuf: use_outbuf, split_length: split_length, reader_options: {first_only: first_only})
+          end
+        end
+      end
     end
   end
 
@@ -353,6 +421,88 @@ class ReaderTest < Minitest::Test
     # end of the bzip2 stream is reached. There is no seek method, so it is not
     # possible to restore the position to the end of the bzip2 stream.
     assert_equal(0, suffixed.read.bytesize)
+  end
+
+  def test_data_after_compressed_multiple_structures
+    suffixed = StringIO.new
+
+    File.open(fixture_path('two_structures.bz2'), 'rb') do |file|
+      suffixed.write(file.read)
+    end
+
+    suffixed.write('Test')
+
+    suffixed.seek(0)
+
+    Bzip2::FFI::Reader.open(suffixed) do |reader|
+      assert_equal(111, reader.read.bytesize)
+      assert_nil(reader.read(1))
+      assert_equal(0, reader.read.bytesize)
+    end
+
+    assert_equal('Test', suffixed.read)
+  end
+
+  def test_data_after_compressed_first_only
+    File.open(fixture_path('two_structures.bz2'), 'rb') do |file|
+      Bzip2::FFI::Reader.open(file, first_only: true) do |reader|
+        assert_equal(55, reader.read.bytesize)
+        assert_nil(reader.read(1))
+        assert_equal(0, reader.read.bytesize)
+      end
+
+      assert_equal('BZh', file.read(3)) # Bzip2 magic for second strcture
+    end
+  end
+
+  def test_data_before_and_after_compressed
+    # Tests that a relative seek (IO::SEEK_CUR) is performed to reset the
+    # position.
+
+    suffixed_and_prefixed = StringIOWithSeekCount.new
+    suffixed_and_prefixed.write('Before')
+
+    File.open(fixture_path('bzipped'), 'rb') do |file|
+      suffixed_and_prefixed.write(file.read)
+    end
+
+    suffixed_and_prefixed.write('After')
+
+    suffixed_and_prefixed.seek(0)
+    assert_equal('Before', suffixed_and_prefixed.read(6))
+
+    Bzip2::FFI::Reader.open(suffixed_and_prefixed) do |reader|
+      assert_equal(65670, reader.read.bytesize)
+      assert_nil(reader.read(1))
+      assert_equal(0, reader.read.bytesize)
+    end
+
+    assert_equal(2, suffixed_and_prefixed.seek_count)
+    assert_equal('After', suffixed_and_prefixed.read)
+  end
+
+  def test_data_before_and_after_compressed_first_only
+    # Tests that a relative seek (IO::SEEK_CUR) is performed to reset the
+    # position.
+
+    prefixed = StringIOWithSeekCount.new
+    prefixed.write('Before')
+
+    File.open(fixture_path('two_structures.bz2'), 'rb') do |file|
+      prefixed.write(file.read)
+    end
+
+    prefixed.seek(0)
+    assert_equal('Before', prefixed.read(6))
+
+    Bzip2::FFI::Reader.open(prefixed, first_only: true) do |reader|
+      assert_equal(55, reader.read.bytesize)
+      assert_nil(reader.read(1))
+      assert_equal(0, reader.read.bytesize)
+    end
+
+    assert_equal(2, prefixed.seek_count)
+    assert_equal('BZh', prefixed.read(3)) # Bzip2 magic for second strcture
   end
 
   def test_finalizer

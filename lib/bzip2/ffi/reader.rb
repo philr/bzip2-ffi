@@ -404,7 +404,7 @@ module Bzip2
         end
       end
 
-      # Calls BZ2_bzDecompressEnd to release memeory associated with the
+      # Calls BZ2_bzDecompressEnd to release memory associated with the
       # decompression stream `s`.
       #
       # Notifies `ObjectSpace` that it is no longer necessary to finalize the

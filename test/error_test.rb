@@ -1,7 +1,7 @@
 # encoding: UTF-8
 # frozen_string_literal: true
 
-require 'test_helper'
+require_relative 'test_helper'
 
 class ErrorTest < Minitest::Test
   def test_initialize_base_class

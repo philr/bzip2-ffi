@@ -4,8 +4,8 @@
 require 'fileutils'
 require 'pathname'
 require 'stringio'
-require 'test_helper'
 require 'tmpdir'
+require_relative 'test_helper'
 
 class ReaderTest < Minitest::Test
   class StringIOWithoutSeek < StringIO

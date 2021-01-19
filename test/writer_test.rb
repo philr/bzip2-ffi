@@ -2,8 +2,8 @@
 # frozen_string_literal: true
 
 require 'pathname'
-require 'test_helper'
 require 'tmpdir'
+require_relative 'test_helper'
 
 class WriterTest < Minitest::Test
   class DummyIO

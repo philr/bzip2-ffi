@@ -8,10 +8,10 @@ module Bzip2
   end
 end
 
-require 'bzip2/ffi/libbz2'
-require 'bzip2/ffi/error'
-require 'bzip2/ffi/io'
-require 'bzip2/ffi/reader'
-require 'bzip2/ffi/writer'
-require 'bzip2/ffi/version'
+require_relative 'ffi/libbz2'
+require_relative 'ffi/error'
+require_relative 'ffi/io'
+require_relative 'ffi/reader'
+require_relative 'ffi/writer'
+require_relative 'ffi/version'
 

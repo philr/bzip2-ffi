@@ -8,10 +8,6 @@ require 'tmpdir'
 require_relative 'test_helper'
 
 class ReaderTest < Minitest::Test
-  class StringIOWithoutSeek < StringIO
-    undef_method :seek
-  end
-
   class StringIOWithSeekCount < StringIO
     def seek_count
       instance_variable_defined?(:@seek_count) ? @seek_count : 0

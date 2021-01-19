@@ -1,3 +1,6 @@
+# encoding: UTF-8
+# frozen_string_literal: true
+
 require 'pathname'
 require 'stringio'
 
@@ -297,7 +300,7 @@ module Bzip2
 
           if length == 0
             check_closed
-            return buffer || ''
+            return buffer || String.new
           end
 
           decompressed = decompress(length)

@@ -1,3 +1,6 @@
+# encoding: UTF-8
+# frozen_string_literal: true
+
 module Bzip2
   module FFI
     # `IO` is a base class providing common functionality for the {Reader} and

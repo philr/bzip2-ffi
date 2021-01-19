@@ -1,3 +1,6 @@
+# encoding: UTF-8
+# frozen_string_literal: true
+
 require 'fileutils'
 require 'pathname'
 require 'stringio'
@@ -43,7 +46,7 @@ class ReaderTest < Minitest::Test
           buffer = input.read(next_read_size)
 
           if use_outbuf
-            outbuf = 'outbuf'
+            outbuf = 'outbuf'.dup
             decompressed = reader.read(read_size, outbuf)
 
             if decompressed
@@ -71,7 +74,7 @@ class ReaderTest < Minitest::Test
         buffer = buffer[0, limit] if limit
 
         if use_outbuf
-          outbuf = 'outbuf'
+          outbuf = 'outbuf'.dup
           decompressed = reader.read(nil, outbuf)
           assert_same(outbuf, decompressed)
         else
@@ -223,12 +226,13 @@ class ReaderTest < Minitest::Test
       decompressed = reader.read(0)
       refute_nil(decompressed)
       assert_equal(0, decompressed.bytesize)
+      refute(decompressed.frozen?)
     end
   end
 
   def test_read_zero_before_eof_buffer
     Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
-      buffer = 'outbuf'
+      buffer = 'outbuf'.dup
       decompressed = reader.read(0, buffer)
       assert_same(buffer, decompressed)
       assert_equal(0, decompressed.bytesize)
@@ -241,13 +245,14 @@ class ReaderTest < Minitest::Test
       decompressed = reader.read(0) # would return nil if greater than 0
       refute_nil(decompressed)
       assert_equal(0, decompressed.bytesize)
+      refute(decompressed.frozen?)
     end
   end
 
   def test_read_zero_after_eof_buffer
     Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
       reader.read
-      buffer = 'outbuf'
+      buffer = 'outbuf'.dup
       decompressed = reader.read(0, buffer) # would return nil if greater than 0
       assert_same(buffer, decompressed)
       assert_equal(0, decompressed.bytesize)
@@ -266,7 +271,7 @@ class ReaderTest < Minitest::Test
     File.open(fixture_path('bzipped'), 'rb') do |file|
       reader = Bzip2::FFI::Reader.new(file)
       reader.close
-      assert_raises(IOError) { reader.read(nil, '') }
+      assert_raises(IOError) { reader.read(nil, String.new) }
     end
   end
 
@@ -282,7 +287,7 @@ class ReaderTest < Minitest::Test
     File.open(fixture_path('bzipped'), 'rb') do |file|
       reader = Bzip2::FFI::Reader.new(file)
       reader.close
-      assert_raises(IOError) { reader.read(1, '') }
+      assert_raises(IOError) { reader.read(1, String.new) }
     end
   end
 
@@ -298,7 +303,7 @@ class ReaderTest < Minitest::Test
     File.open(fixture_path('bzipped'), 'rb') do |file|
       reader = Bzip2::FFI::Reader.new(file)
       reader.close
-      assert_raises(IOError) { reader.read(0, '') }
+      assert_raises(IOError) { reader.read(0, String.new) }
     end
   end
 

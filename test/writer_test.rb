@@ -128,7 +128,7 @@ class WriterTest < Minitest::Test
 
   def test_fixture_uncompressible
     [16, 1024, 16384, nil].each do |read_size|
-      bunzip_test('bzipped', read_size: read_size)
+      bunzip_test('compressed.bz2', read_size: read_size)
     end
   end
 

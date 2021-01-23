@@ -174,9 +174,9 @@ class ReaderTest < Minitest::Test
   end
 
   def test_fixture_uncompressible
-    [16, 1024, 16384, File.size(fixture_path('bzipped')), nil].each do |read_size|
+    [16, 1024, 16384, File.size(fixture_path('compressed.bz2')), nil].each do |read_size|
       [false, true].each do |use_outbuf|
-        bzip_test('bzipped', read_size: read_size, use_outbuf: use_outbuf)
+        bzip_test('compressed.bz2', read_size: read_size, use_outbuf: use_outbuf)
       end
     end
   end
@@ -210,7 +210,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_close_mid_read
-    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+    Bzip2::FFI::Reader.open(fixture_path('compressed.bz2')) do |reader|
       decompressed = reader.read(1)
       refute_nil(decompressed)
       assert_equal(1, decompressed.bytesize)
@@ -218,7 +218,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_zero_before_eof
-    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+    Bzip2::FFI::Reader.open(fixture_path('compressed.bz2')) do |reader|
       decompressed = reader.read(0)
       refute_nil(decompressed)
       assert_equal(0, decompressed.bytesize)
@@ -227,7 +227,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_zero_before_eof_buffer
-    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+    Bzip2::FFI::Reader.open(fixture_path('compressed.bz2')) do |reader|
       buffer = 'outbuf'.dup
       decompressed = reader.read(0, buffer)
       assert_same(buffer, decompressed)
@@ -236,7 +236,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_zero_after_eof
-    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+    Bzip2::FFI::Reader.open(fixture_path('compressed.bz2')) do |reader|
       reader.read
       decompressed = reader.read(0) # would return nil if greater than 0
       refute_nil(decompressed)
@@ -246,7 +246,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_zero_after_eof_buffer
-    Bzip2::FFI::Reader.open(fixture_path('bzipped')) do |reader|
+    Bzip2::FFI::Reader.open(fixture_path('compressed.bz2')) do |reader|
       reader.read
       buffer = 'outbuf'.dup
       decompressed = reader.read(0, buffer) # would return nil if greater than 0
@@ -256,7 +256,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_after_close_read_all
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       reader = Bzip2::FFI::Reader.new(file)
       reader.close
       assert_raises(IOError) { reader.read }
@@ -264,7 +264,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_after_close_read_all_buffer
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       reader = Bzip2::FFI::Reader.new(file)
       reader.close
       assert_raises(IOError) { reader.read(nil, String.new) }
@@ -272,7 +272,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_after_close_read_n
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       reader = Bzip2::FFI::Reader.new(file)
       reader.close
       assert_raises(IOError) { reader.read(1) }
@@ -280,7 +280,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_after_close_read_n_buffer
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       reader = Bzip2::FFI::Reader.new(file)
       reader.close
       assert_raises(IOError) { reader.read(1, String.new) }
@@ -288,7 +288,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_after_close_read_zero
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       reader = Bzip2::FFI::Reader.new(file)
       reader.close
       assert_raises(IOError) { reader.read(0) }
@@ -296,7 +296,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_read_after_close_read_zero_buffer
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       reader = Bzip2::FFI::Reader.new(file)
       reader.close
       assert_raises(IOError) { reader.read(0, String.new) }
@@ -318,7 +318,7 @@ class ReaderTest < Minitest::Test
     [1024, Bzip2::FFI::Reader::READ_BUFFER_SIZE, 8192].each do |size|
       partial = StringIO.new
 
-      File.open(fixture_path('bzipped'), 'rb') do |input|
+      File.open(fixture_path('compressed.bz2'), 'rb') do |input|
         buffer = input.read(size)
         refute_nil(buffer)
         assert_equal(size, buffer.bytesize)
@@ -336,7 +336,7 @@ class ReaderTest < Minitest::Test
   def test_corrupted_bzip
     corrupted = StringIO.new
 
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       corrupted.write(file.read)
     end
 
@@ -353,7 +353,7 @@ class ReaderTest < Minitest::Test
   def test_data_after_compressed
     suffixed = StringIO.new
 
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       suffixed.write(file.read)
     end
 
@@ -373,7 +373,7 @@ class ReaderTest < Minitest::Test
   def test_data_after_compressed_no_seek
     suffixed = StringIO.new
 
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       suffixed.write(file.read)
     end
 
@@ -400,7 +400,7 @@ class ReaderTest < Minitest::Test
   def test_data_after_compressed_seek_raises_io_error
     suffixed = StringIO.new
 
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       suffixed.write(file.read)
     end
 
@@ -463,7 +463,7 @@ class ReaderTest < Minitest::Test
     suffixed_and_prefixed = StringIOWithSeekCount.new
     suffixed_and_prefixed.write('Before')
 
-    File.open(fixture_path('bzipped'), 'rb') do |file|
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
       suffixed_and_prefixed.write(file.read)
     end
 
@@ -540,7 +540,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_open_block_path
-    path = fixture_path('bzipped')
+    path = fixture_path('compressed.bz2')
     [path, Pathname.new(path)].each do |path_param|
       Bzip2::FFI::Reader.open(path_param) do |reader|
         io = reader.send(:io)
@@ -553,7 +553,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_open_no_block_path
-    path = fixture_path('bzipped')
+    path = fixture_path('compressed.bz2')
     [path, Pathname.new(path)].each do |path_param|
       reader = Bzip2::FFI::Reader.open(path_param)
       begin
@@ -569,13 +569,13 @@ class ReaderTest < Minitest::Test
   end
 
   def test_open_block_path_always_autoclosed
-    Bzip2::FFI::Reader.open(fixture_path('bzipped'), autoclose: false) do |reader|
+    Bzip2::FFI::Reader.open(fixture_path('compressed.bz2'), autoclose: false) do |reader|
       assert_equal(true, reader.autoclose?)
     end
   end
 
   def test_open_no_block_path_always_autoclosed
-    reader = Bzip2::FFI::Reader.open(fixture_path('bzipped'), autoclose: false)
+    reader = Bzip2::FFI::Reader.open(fixture_path('compressed.bz2'), autoclose: false)
     begin
       assert_equal(true, reader.autoclose?)
     ensure
@@ -595,7 +595,7 @@ class ReaderTest < Minitest::Test
 
   def test_open_after_open_file_exception_closes_file
     Bzip2::FFI::Reader.test_after_open_file_raise_exception = true
-    assert_raises(RuntimeError) { Bzip2::FFI::Reader.open(fixture_path('bzipped')) }
+    assert_raises(RuntimeError) { Bzip2::FFI::Reader.open(fixture_path('compressed.bz2')) }
     file = Bzip2::FFI::Reader.test_after_open_file_last_io
     refute_nil(file)
     assert(file.closed?)

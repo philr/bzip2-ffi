@@ -7,7 +7,7 @@ module Bzip2
   module FFI
     # FFI bindings for the libbz2 low-level interface.
     #
-    # See bzlib.h and http://bzip.org/docs.html.
+    # See bzlib.h and https://sourceware.org/bzip2/docs.html.
     #
     # @private
     module Libbz2 #:nodoc:

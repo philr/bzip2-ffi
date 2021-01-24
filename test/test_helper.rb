@@ -20,6 +20,7 @@ require 'bzip2/ffi'
 require 'fileutils'
 require 'minitest/autorun'
 require 'open3'
+require 'pathname'
 
 class Bzip2::FFI::IO
   class << self
@@ -110,9 +111,21 @@ module TestHelper
       File.join(FIXTURES_DIR, fixture)
     end
   end
+
+  module TestDefinitions
+    def path_or_pathname_tests(name, &block)
+      [['path', Proc.new {|p| p }], ['pathname', Proc.new {|p| Pathname.new(p) }]].each do |(description, path_param)|
+        define_method("test_#{name}_with_#{description}") do
+          instance_exec(path_param, &block)
+        end
+      end
+    end
+  end
 end
 
 class Minitest::Test
   include TestHelper::Assertions
   include TestHelper::Fixtures
+  extend TestHelper::Fixtures
+  extend TestHelper::TestDefinitions
 end

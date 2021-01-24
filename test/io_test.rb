@@ -216,38 +216,33 @@ class IOTest < Minitest::Test
     assert_equal('closed stream', e.message)
   end
 
-  def test_check_error_not_error
-    io = TestIO.new(DummyIO.new)
-
-    (0..4).each do |i|
+  (0..4).each do |i|
+    define_method("test_check_error_not_error_#{i}") do
+      io = TestIO.new(DummyIO.new)
       assert_equal(i, io.check_error(i))
     end
   end
 
-  def test_check_error_error
-    codes = {
-      Bzip2::FFI::Libbz2::BZ_SEQUENCE_ERROR => Bzip2::FFI::Error::SequenceError,
-      Bzip2::FFI::Libbz2::BZ_PARAM_ERROR => Bzip2::FFI::Error::ParamError,
-      Bzip2::FFI::Libbz2::BZ_MEM_ERROR => Bzip2::FFI::Error::MemoryError,
-      Bzip2::FFI::Libbz2::BZ_DATA_ERROR => Bzip2::FFI::Error::DataError,
-      Bzip2::FFI::Libbz2::BZ_DATA_ERROR_MAGIC => Bzip2::FFI::Error::MagicDataError,
-      Bzip2::FFI::Libbz2::BZ_CONFIG_ERROR => Bzip2::FFI::Error::ConfigError
-    }
-
-    io = TestIO.new(DummyIO.new)
-
-    codes.each do |code, error_class|
+  {
+    Bzip2::FFI::Libbz2::BZ_SEQUENCE_ERROR => Bzip2::FFI::Error::SequenceError,
+    Bzip2::FFI::Libbz2::BZ_PARAM_ERROR => Bzip2::FFI::Error::ParamError,
+    Bzip2::FFI::Libbz2::BZ_MEM_ERROR => Bzip2::FFI::Error::MemoryError,
+    Bzip2::FFI::Libbz2::BZ_DATA_ERROR => Bzip2::FFI::Error::DataError,
+    Bzip2::FFI::Libbz2::BZ_DATA_ERROR_MAGIC => Bzip2::FFI::Error::MagicDataError,
+    Bzip2::FFI::Libbz2::BZ_CONFIG_ERROR => Bzip2::FFI::Error::ConfigError
+  }.each do |code, error_class|
+    define_method("test_check_error_error_#{code}") do
+      io = TestIO.new(DummyIO.new)
       assert_raises(error_class) { io.check_error(code) }
     end
   end
 
-  def test_check_error_unexpected
-    io = TestIO.new(DummyIO.new)
-
-    # -6, -7 and -8 are codes that are only raised by the libbz2 high-level
-    # interface. Only the low-level interface is used by Bzip2::FFI.
-    # -10 is not defined by libbz2.
-    [-6, -7, -8, -10].each do |code|
+  # -6, -7 and -8 are codes that are only raised by the libbz2 high-level
+  # interface. Only the low-level interface is used by Bzip2::FFI. -10 is not
+  # defined by libbz2.
+  [-6, -7, -8, -10].each do |code|
+    define_method("test_check_error_unexpected_#{code}") do
+      io = TestIO.new(DummyIO.new)
       error = assert_raises(Bzip2::FFI::Error::UnexpectedError) { io.check_error(code) }
       assert_includes(error.message, code.to_s)
     end

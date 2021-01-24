@@ -2,7 +2,6 @@
 # frozen_string_literal: true
 
 require 'fileutils'
-require 'pathname'
 require 'stringio'
 require 'tmpdir'
 require_relative 'test_helper'
@@ -21,6 +20,24 @@ class ReaderTest < Minitest::Test
       end
 
       super
+    end
+  end
+
+  class << self
+    def read_size_and_use_outbuf_combinations(fixture)
+      [16, 1024, 16384, File.size(fixture_path(fixture)), nil].each do |read_size|
+        [false, true].each do |use_outbuf|
+          yield read_size, use_outbuf, "#{read_size ? "_with_read_size_#{read_size}" : ''}#{use_outbuf ? '_using_outbuf' : ''}"
+        end
+      end
+    end
+
+    def bzip_fixture_tests(name, fixture)
+      read_size_and_use_outbuf_combinations(fixture) do |read_size, use_outbuf, description|
+        define_method("test_fixture_#{name}#{description}") do
+          bzip_test(fixture, read_size: read_size, use_outbuf: use_outbuf)
+        end
+      end
     end
   end
 
@@ -157,53 +174,24 @@ class ReaderTest < Minitest::Test
     bzip_test(nil)
   end
 
-  def test_fixture_text
-    [16, 1024, 16384, File.size(fixture_path('lorem.txt')), nil].each do |read_size|
-      [false, true].each do |use_outbuf|
-        bzip_test('lorem.txt', read_size: read_size, use_outbuf: use_outbuf)
-      end
-    end
-  end
+  bzip_fixture_tests(:text, 'lorem.txt')
+  bzip_fixture_tests(:very_compressible, 'zero.txt')
+  bzip_fixture_tests(:uncompressible, 'compressed.bz2')
+  bzip_fixture_tests(:image, 'moon.tiff')
 
-  def test_fixture_very_compressible
-    [16, 1024, 16384, File.size(fixture_path('zero.txt')), nil].each do |read_size|
-      [false, true].each do |use_outbuf|
-        bzip_test('zero.txt', read_size: read_size, use_outbuf: use_outbuf)
-      end
-    end
-  end
-
-  def test_fixture_uncompressible
-    [16, 1024, 16384, File.size(fixture_path('compressed.bz2')), nil].each do |read_size|
-      [false, true].each do |use_outbuf|
-        bzip_test('compressed.bz2', read_size: read_size, use_outbuf: use_outbuf)
-      end
-    end
-  end
-
-  def test_fixture_image
-    [16, 1024, 16384, File.size(fixture_path('moon.tiff')), nil].each do |read_size|
-      [false, true].each do |use_outbuf|
-        bzip_test('moon.tiff', read_size: read_size, use_outbuf: use_outbuf)
-      end
-    end
-  end
-
-  def test_small
-    # Not trivial to check if the value passed has any effect. Just check that
-    # there are no failures.
-    [false, true].each do |small|
+  [false, true].each do |small|
+    define_method("test_#{small ? '' : 'not_'}small") do
+      # Not trivial to check if the value passed has any effect. Just check that
+      # there are no failures.
       bzip_test('lorem.txt', reader_options: {small: small})
     end
   end
 
-  def test_multiple_bzip2_structures
-    [16, 1024, 16384, File.size(fixture_path('lorem.txt')), nil].each do |read_size|
-      [false, true].each do |use_outbuf|
-        [16383, 16384, 32767, 32768].each do |split_length|
-          [false, true].each do |first_only|
-            bzip_test('lorem.txt', read_size: read_size, use_outbuf: use_outbuf, split_length: split_length, reader_options: {first_only: first_only})
-          end
+  read_size_and_use_outbuf_combinations('lorem.txt') do |read_size, use_outbuf, description|
+    [16383, 16384, 32767, 32768].each do |split_length|
+      [false, true].each do |first_only|
+        define_method("test_multiple_bzip2_structures#{description}_with_split_length_#{split_length}#{first_only ? '_first_only' : ''}") do
+          bzip_test('lorem.txt', read_size: read_size, use_outbuf: use_outbuf, split_length: split_length, reader_options: {first_only: first_only})
         end
       end
     end
@@ -314,8 +302,8 @@ class ReaderTest < Minitest::Test
     end
   end
 
-  def test_truncated_bzip
-    [1024, Bzip2::FFI::Reader::READ_BUFFER_SIZE, 8192].each do |size|
+  [1024, Bzip2::FFI::Reader::READ_BUFFER_SIZE, Bzip2::FFI::Reader::READ_BUFFER_SIZE + 1, 8192].each do |size|
+    define_method("test_bzip_truncated_to_#{size}_bytes") do
       partial = StringIO.new
 
       File.open(fixture_path('compressed.bz2'), 'rb') do |input|
@@ -539,32 +527,28 @@ class ReaderTest < Minitest::Test
     end
   end
 
-  def test_open_block_path
+  path_or_pathname_tests(:open_block) do |path_param|
     path = fixture_path('compressed.bz2')
-    [path, Pathname.new(path)].each do |path_param|
-      Bzip2::FFI::Reader.open(path_param) do |reader|
-        io = reader.send(:io)
-        assert_kind_of(File, io)
-        assert_equal(path, io.path)
-        assert_raises(IOError) { io.write('test') }
-        assert_nothing_raised { io.read(1) }
-      end
+    Bzip2::FFI::Reader.open(path_param.call(path)) do |reader|
+      io = reader.send(:io)
+      assert_kind_of(File, io)
+      assert_equal(path.to_s, io.path)
+      assert_raises(IOError) { io.write('test') }
+      assert_nothing_raised { io.read(1) }
     end
   end
 
-  def test_open_no_block_path
+  path_or_pathname_tests(:open_no_block) do |path_param|
     path = fixture_path('compressed.bz2')
-    [path, Pathname.new(path)].each do |path_param|
-      reader = Bzip2::FFI::Reader.open(path_param)
-      begin
-        io = reader.send(:io)
-        assert_kind_of(File, io)
-        assert_equal(path, io.path)
-        assert_raises(IOError) { io.write('test') }
-        assert_nothing_raised { io.read(1) }
-      ensure
-        io.close
-      end
+    reader = Bzip2::FFI::Reader.open(path_param.call(path))
+    begin
+      io = reader.send(:io)
+      assert_kind_of(File, io)
+      assert_equal(path, io.path)
+      assert_raises(IOError) { io.write('test') }
+      assert_nothing_raised { io.read(1) }
+    ensure
+      reader.close
     end
   end
 
@@ -629,15 +613,9 @@ class ReaderTest < Minitest::Test
     end
   end
 
-  def test_class_read_path
+  path_or_pathname_tests(:class_read) do |path_param|
     class_read_test('test_path') do |compressed|
-      Bzip2::FFI::Reader.read(compressed)
-    end
-  end
-
-  def test_class_read_pathname
-    class_read_test('test_pathname') do |compressed|
-      Bzip2::FFI::Reader.read(Pathname.new(compressed))
+      Bzip2::FFI::Reader.read(path_param.call(compressed))
     end
   end
 

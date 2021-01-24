@@ -1,7 +1,6 @@
 # encoding: UTF-8
 # frozen_string_literal: true
 
-require 'pathname'
 require 'tmpdir'
 require_relative 'test_helper'
 
@@ -15,6 +14,22 @@ class WriterTest < Minitest::Test
 
     def write(string)
       @written_bytes += string.bytesize
+    end
+  end
+
+  class << self
+    def read_size_combinations(fixture)
+      [16, 1024, 16384, File.size(fixture_path(fixture)), nil].each do |read_size|
+        yield read_size, "#{read_size ? "_with_read_size_#{read_size}" : ''}"
+      end
+    end
+
+    def bunzip_fixture_tests(name, fixture)
+      read_size_combinations(fixture) do |read_size, description|
+        define_method("test_fixture_#{name}#{description}") do
+          bunzip_test(fixture, read_size: read_size)
+        end
+      end
     end
   end
 
@@ -114,29 +129,10 @@ class WriterTest < Minitest::Test
     bunzip_test(nil)
   end
 
-  def test_fixture_text
-    [16, 1024, 16384, nil].each do |read_size|
-      bunzip_test('lorem.txt', read_size: read_size)
-    end
-  end
-
-  def test_fixture_very_compressible
-    [16, 1024, 16384, nil].each do |read_size|
-      bunzip_test('zero.txt', read_size: read_size)
-    end
-  end
-
-  def test_fixture_uncompressible
-    [16, 1024, 16384, nil].each do |read_size|
-      bunzip_test('compressed.bz2', read_size: read_size)
-    end
-  end
-
-  def test_fixture_image
-    [16, 1024, 16384, nil].each do |read_size|
-      bunzip_test('moon.tiff', read_size: read_size)
-    end
-  end
+  bunzip_fixture_tests(:text, 'lorem.txt')
+  bunzip_fixture_tests(:very_compressible, 'zero.txt')
+  bunzip_fixture_tests(:uncompressible, 'compressed.bz2')
+  bunzip_fixture_tests(:image, 'moon.tiff')
 
   def test_encoding_handling
     bunzip_test(['áÁçÇðÐéÉ'.encode(Encoding::UTF_8), 'áÁçÇðÐéÉ'.encode(Encoding::ISO_8859_1)])
@@ -178,11 +174,8 @@ class WriterTest < Minitest::Test
     assert_equal(explicit_io.written_bytes, default_io.written_bytes)
   end
 
-  def test_work_factor
-    # Not trivial to check if the value passed has any effect. Just check that
-    # there are no failures for values within the acceptable range.
-
-    [0, 100, 250].each do |work_factor|
+  [0, 100, 250].each do |work_factor|
+    define_method("test_work_factor_#{work_factor}") do
       bunzip_test('lorem.txt', writer_options: {work_factor: work_factor})
     end
   end
@@ -245,14 +238,16 @@ class WriterTest < Minitest::Test
     assert_raises(ArgumentError) { Bzip2::FFI::Writer.open(Object.new) }
   end
 
-  def test_open_invalid_block_size
-    assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, block_size: 0) }
-    assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, block_size: 10) }
+  [0, 10].each do |block_size|
+    define_method("test_open_invalid_block_size_#{block_size}") do
+      assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, block_size: block_size) }
+    end
   end
 
-  def test_open_invalid_work_factor
-    assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, work_factor: -1) }
-    assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, work_factor: 251) }
+  [-1, 251].each do |work_factor|
+    define_method("test_open_invalid_work_factor_#{work_factor}") do
+      assert_raises(RangeError) { Bzip2::FFI::Writer.open(DummyIO.new, work_factor: work_factor) }
+    end
   end
 
   def test_open_block_io
@@ -274,35 +269,31 @@ class WriterTest < Minitest::Test
     end
   end
 
-  def test_open_block_path
+  path_or_pathname_tests(:open_block) do |path_param|
     Dir.mktmpdir('bzip2-ffi-test') do |dir|
       path = File.join(dir, 'test')
-      [path, Pathname.new(path)].each do |path_param|
-        Bzip2::FFI::Writer.open(path_param) do |writer|
-          io = writer.send(:io)
-          assert_kind_of(File, io)
-          assert_equal(path, io.path)
-          assert_raises(IOError) { io.read(1) }
-          assert_nothing_raised { io.write('test') }
-        end
+      Bzip2::FFI::Writer.open(path_param.call(path)) do |writer|
+        io = writer.send(:io)
+        assert_kind_of(File, io)
+        assert_equal(path, io.path)
+        assert_raises(IOError) { io.read(1) }
+        assert_nothing_raised { io.write('test') }
       end
     end
   end
 
-  def test_open_no_block_path
+  path_or_pathname_tests(:open_no_block) do |path_param|
     Dir.mktmpdir('bzip2-ffi-test') do |dir|
       path = File.join(dir, 'test')
-      [path, Pathname.new(path)].each do |path_param|
-        writer = Bzip2::FFI::Writer.open(path_param)
-        begin
-          io = writer.send(:io)
-          assert_kind_of(File, io)
-          assert_equal(path, io.path)
-          assert_raises(IOError) { io.read(1) }
-          assert_nothing_raised { io.write('test') }
-        ensure
-          writer.close
-        end
+      writer = Bzip2::FFI::Writer.open(path_param.call(path))
+      begin
+        io = writer.send(:io)
+        assert_kind_of(File, io)
+        assert_equal(path, io.path)
+        assert_raises(IOError) { io.read(1) }
+        assert_nothing_raised { io.write('test') }
+      ensure
+        writer.close
       end
     end
   end
@@ -406,15 +397,9 @@ class WriterTest < Minitest::Test
     end
   end
 
-  def test_class_write_path
+  path_or_pathname_tests(:class_write) do |path_param|
     class_write_test('test_path') do |compressed, content|
-      Bzip2::FFI::Writer.write(compressed, content)
-    end
-  end
-
-  def test_class_write_pathname
-    class_write_test('test_pathname') do |compressed, content|
-      Bzip2::FFI::Writer.write(Pathname.new(compressed), content)
+      Bzip2::FFI::Writer.write(path_param.call(compressed), content)
     end
   end
 

@@ -14,6 +14,15 @@ Gem::Specification.new do |s|
   s.email = 'phil.ross@gmail.com'
   s.homepage = 'https://github.com/philr/bzip2-ffi'
   s.license = 'MIT'
+  if s.respond_to? :metadata=
+    s.metadata = {
+      'bug_tracker_uri' => 'https://github.com/philr/bzip2-ffi/issues',
+      'changelog_uri' => 'https://github.com/philr/bzip2-ffi/blob/master/CHANGES.md',
+      'documentation_uri' => "https://rubydoc.info/gems/#{s.name}/#{s.version}",
+      'homepage_uri' => s.homepage,
+      'source_code_uri' => "https://github.com/philr/bzip2-ffi/tree/v#{s.version}"
+    }
+  end
   s.files = %w(CHANGES.md Gemfile LICENSE README.md Rakefile bzip2-ffi.gemspec .yardopts) +
             Dir['lib/**/*.rb'] +
             Dir['test/**/*.rb'] +

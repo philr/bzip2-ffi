@@ -1,4 +1,4 @@
-# Bzip2::FFI #
+# Bzip2::FFI
 
 [![RubyGems](https://img.shields.io/gem/v/bzip2-ffi?logo=rubygems&label=Gem)](https://rubygems.org/gems/bzip2-ffi) [![Tests](https://github.com/philr/bzip2-ffi/workflows/Tests/badge.svg?branch=master&event=push)](https://github.com/philr/bzip2-ffi/actions?query=workflow%3ATests+branch%3Amaster+event%3Apush) [![Coverage Status](https://img.shields.io/coveralls/github/philr/bzip2-ffi/master?label=Coverage&logo=Coveralls)](https://coveralls.io/github/philr/bzip2-ffi?branch=master)
 
@@ -8,7 +8,7 @@ The Bzip2::FFI Reader and Writer classes support reading and writing bzip2
 compressed data as an `IO`-like stream.
 
 
-## Installation ##
+## Installation
 
 To install the Bzip2::FFI gem, run the following command:
 
@@ -20,12 +20,12 @@ To add Bzip2::FFI as a Bundler dependency, add the following line to your
     gem 'bzip2-ffi'
 
 
-## Compatibility ##
+## Compatibility
 
 Bzip2::FFI is tested on Ruby MRI 1.9.3+ and JRuby 1.7+.
 
 
-## Runtime Dependencies ##
+## Runtime Dependencies
 
 Bzip2::FFI is a pure-Ruby library that uses
 [Ruby-FFI](https://rubygems.org/gems/ffi) (Foreign Function Interface) to load
@@ -36,7 +36,7 @@ libbz2 is available as a package on most UNIX-based systems (for example,
 CentOS).
 
 
-### Windows ###
+### Windows
 
 On Windows, you will need to have `libbz2.dll` or `bz2.dll` available on the
 `PATH` or in the Ruby `bin` directory.
@@ -50,14 +50,14 @@ Builds from the bzip2-windows project depend on the Visual Studio C Runtime
 Library. Links to the installer can be found on the bzip2-windows release page.
 
 
-## Usage ##
+## Usage
 
 To use Bzip2::FFI, it must first be loaded with:
 
     require 'bzip2/ffi'
 
 
-### Compressing ###
+### Compressing
 
 Data can be compressed using the `Bzip2::FFI::Writer` class. For example, the
 following compresses lines read from standard input (`ARGF`):
@@ -87,7 +87,7 @@ In each of the examples above, `io_or_path` can either be a path to a file to
 write to or an `IO`-like object that has a `write` method.
 
 
-### Decompressing ###
+### Decompressing
 
 Data can be decompressed using the `Bzip2::FFI::Reader` class. For example:
 
@@ -116,7 +116,7 @@ In each of the examples above, `io_or_path` can either be a path to a file to
 read from or an `IO`-like object that has a `read` method.
 
 
-### Character Encoding ###
+### Character Encoding
 
 Bzip2::FFI does not perform any encoding conversion when reading or writing.
 Data read using `Bzip2::FFI::Reader` is returned as `String` instances with
@@ -125,19 +125,19 @@ ASCII-8BIT (BINARY) encoding representing the raw decompressed bytes.
 `write` method (using the encoding of the `String`).
 
 
-## Documentation ##
+## Documentation
 
 Documentation for Bzip2::FFI is available on
 [RubyDoc.info](https://www.rubydoc.info/gems/bzip2-ffi).
 
 
-## License ##
+## License
 
 Bzip2::FFI is distributed under the terms of the MIT license. A copy of this
 license can be found in the included LICENSE file.
 
 
-## GitHub Project ##
+## GitHub Project
 
 Source code, release information and the issue tracker can be found on the
 [Bzip2::FFI GitHub project page](https://github.com/philr/bzip2-ffi).

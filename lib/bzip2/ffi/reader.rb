@@ -369,7 +369,7 @@ module Bzip2
             end
 
             # Reached the end of input without reading anything in the current
-            # stream. No more data to process.
+            # bzip2 structure. No more data to process.
             if @pos == @structure_start_pos
               @out_eof = true
               break
@@ -410,7 +410,7 @@ module Bzip2
                 decompress_init(s)
               else
                 # May have already read data after the end of the first bzip2
-                # structure
+                # structure.
                 attempt_seek_to_structure_start if @first_only
                 @out_eof = true
                 break

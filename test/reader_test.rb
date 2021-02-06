@@ -188,13 +188,26 @@ class ReaderTest < Minitest::Test
   end
 
   read_size_and_use_outbuf_combinations('lorem.txt') do |read_size, use_outbuf, description|
-    [16383, 16384, 32767, 32768].each do |split_length|
+    [16361, 16384, 32647, 32768].each do |split_length|
       [false, true].each do |first_only|
         define_method("test_multiple_bzip2_structures#{description}_with_split_length_#{split_length}#{first_only ? '_first_only' : ''}") do
           bzip_test('lorem.txt', read_size: read_size, use_outbuf: use_outbuf, split_length: split_length, reader_options: {first_only: first_only})
         end
       end
     end
+  end
+
+  def test_reads_all_when_first_bzip2_structure_ends_at_end_of_a_compressed_data_read
+    # Tests s[:avail_in] reaching zero when in_eof is false.
+    #
+    # Requires a bzip2 fixture with a first structure that ends at the end of a
+    # read from the compressed stream (read Bzip2::FFI::Reader::READ_BUFFER_SIZE
+    # bytes at a time).
+
+    assert_equal(0, 4096 % Bzip2::FFI::Reader::READ_BUFFER_SIZE)
+    result = Bzip2::FFI::Reader.read(fixture_path('lorem-first-structure-4096-bytes.txt.bz2'))
+    expected = File.open(fixture_path('lorem.txt'), 'rb') {|f| f.read }
+    assert_equal(expected, result)
   end
 
   def test_close_mid_read

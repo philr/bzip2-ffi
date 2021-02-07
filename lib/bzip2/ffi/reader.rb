@@ -217,6 +217,7 @@ module Bzip2
         @first_only = options[:first_only]
         @small = options[:small] ? 1 : 0
 
+        @in_eof = false
         @out_eof = false
         @in_buffer = nil
         @structure_number = 1
@@ -370,7 +371,6 @@ module Bzip2
         s = stream
         return nil if @out_eof
 
-        in_eof = false
         out_buffer = ::FFI::MemoryPointer.new(1, count)
         begin
           s[:next_out] = out_buffer
@@ -379,18 +379,18 @@ module Bzip2
           # Decompress data until count bytes have been read, or the end of
           # the stream is reached.
           loop do
-            if s[:avail_in] == 0 && !in_eof
+            if s[:avail_in] == 0 && !@in_eof
               bytes = io.read(READ_BUFFER_SIZE)
 
               if bytes && bytes.bytesize > 0
                 @in_pos += bytes.bytesize
-                in_eof = bytes.bytesize < READ_BUFFER_SIZE
+                @in_eof = bytes.bytesize < READ_BUFFER_SIZE
                 @in_buffer = ::FFI::MemoryPointer.new(1, bytes.bytesize)
                 @in_buffer.write_bytes(bytes)
                 s[:next_in] = @in_buffer
                 s[:avail_in] = @in_buffer.size
               else
-                in_eof = true
+                @in_eof = true
               end
             end
 
@@ -428,7 +428,7 @@ module Bzip2
             if res == Libbz2::BZ_STREAM_END
               decompress_end(s)
 
-              if (s[:avail_in] > 0 || !in_eof) && !@first_only
+              if (s[:avail_in] > 0 || !@in_eof) && !@first_only
                 # Re-initialize to read a second bzip2 structure if there is
                 # still input available and not restricting to the first stream.
                 @structure_number += 1
@@ -444,7 +444,7 @@ module Bzip2
             else
               # No more input available and calling BZ2_bzDecompress didn't
               # advance the output. Raise an error.
-              if in_eof && s[:avail_in] == 0 && prev_avail_out == s[:avail_out]
+              if @in_eof && s[:avail_in] == 0 && prev_avail_out == s[:avail_out]
                 decompress_end(s)
                 @out_eof = true
                 raise Error::UnexpectedEofError.new

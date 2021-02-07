@@ -212,7 +212,7 @@ class ReaderTest < Minitest::Test
   end
 
   def test_reads_all_when_first_bzip2_structure_ends_at_end_of_a_compressed_data_read
-    # Tests s[:avail_in] reaching zero when in_eof is false.
+    # Tests s[:avail_in] reaching zero when @in_eof is false.
     #
     # Requires a bzip2 fixture with a first structure that ends at the end of a
     # read from the compressed stream (read Bzip2::FFI::Reader::READ_BUFFER_SIZE

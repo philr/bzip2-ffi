@@ -338,6 +338,16 @@ module Bzip2
         self
       end
 
+      # Returns the number of uncompressed bytes that have been written.
+      #
+      # @return [Integer] The number of uncompressed bytes that have been
+      #                   written.
+      # @raise [IOError] If the {Writer} has been closed.
+      def pos
+        s = stream
+        (s[:total_in_hi32] << 32) + s[:total_in_lo32]
+      end
+
       private
 
       # Calls `BZ2_bzCompress` repeatedly without input to complete compression

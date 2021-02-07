@@ -65,6 +65,10 @@ module TestHelper
       end
     end
 
+    def skip_slow_test_unless_enabled
+      skip('Skipping slow test (enable with RUN_SLOW_TESTS=1)') unless ENV['RUN_SLOW_TESTS'] == '1'
+    end
+
     private
 
     if File::ALT_SEPARATOR

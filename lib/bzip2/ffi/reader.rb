@@ -327,6 +327,20 @@ module Bzip2
         end
       end
 
+      # Returns `true` if decompression has completed, otherwise `false`.
+      #
+      # Note that it is possible for `false` to be returned after all the
+      # decompressed data has been read. In such cases, the next call to {#read}
+      # will detect the end of the bzip2 structure and set {#eof?} to `true`.
+      #
+      # @return [Boolean] If decompression has completed, otherwise `false`.
+      # @raise [IOError] If the {Reader} has been closed.
+      def eof?
+        check_closed
+        @out_eof
+      end
+      alias eof eof?
+
       private
 
       # Attempts to decompress and return `count` bytes.

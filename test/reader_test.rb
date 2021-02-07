@@ -58,6 +58,14 @@ class ReaderTest < Minitest::Test
           next_read_size = limit ? [limit - count, read_size].min : read_size
           buffer = input.read(next_read_size)
 
+          # Note that reader.eof? may not be true if buffer is nil -
+          # BZ2_bzDecompress may not yet have had a chance to indicate
+          # BZ_STREAM_END.
+          if (buffer)
+            assert_equal(false, reader.eof?)
+            assert_equal(false, reader.eof)
+          end
+
           if use_outbuf
             outbuf = 'outbuf'.dup
             decompressed = reader.read(read_size, outbuf)
@@ -99,6 +107,8 @@ class ReaderTest < Minitest::Test
         assert_equal(buffer, decompressed)
       end
 
+      assert_equal(true, reader.eof?)
+      assert_equal(true, reader.eof)
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
     end
@@ -364,6 +374,8 @@ class ReaderTest < Minitest::Test
 
     Bzip2::FFI::Reader.open(suffixed) do |reader|
       assert_equal(65670, reader.read.bytesize)
+      assert_equal(true, reader.eof?)
+      assert_equal(true, reader.eof)
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
     end
@@ -388,6 +400,8 @@ class ReaderTest < Minitest::Test
 
     Bzip2::FFI::Reader.open(suffixed) do |reader|
       assert_equal(65670, reader.read.bytesize)
+      assert_equal(true, reader.eof?)
+      assert_equal(true, reader.eof)
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
     end
@@ -415,6 +429,8 @@ class ReaderTest < Minitest::Test
 
     Bzip2::FFI::Reader.open(suffixed) do |reader|
       assert_equal(65670, reader.read.bytesize)
+      assert_equal(true, reader.eof?)
+      assert_equal(true, reader.eof)
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
     end
@@ -438,6 +454,8 @@ class ReaderTest < Minitest::Test
 
     Bzip2::FFI::Reader.open(suffixed) do |reader|
       assert_equal(111, reader.read.bytesize)
+      assert_equal(true, reader.eof?)
+      assert_equal(true, reader.eof)
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
     end
@@ -449,6 +467,8 @@ class ReaderTest < Minitest::Test
     File.open(fixture_path('two_structures.bz2'), 'rb') do |file|
       Bzip2::FFI::Reader.open(file, first_only: true) do |reader|
         assert_equal(55, reader.read.bytesize)
+        assert_equal(true, reader.eof?)
+        assert_equal(true, reader.eof)
         assert_nil(reader.read(1))
         assert_equal(0, reader.read.bytesize)
       end
@@ -475,6 +495,8 @@ class ReaderTest < Minitest::Test
 
     Bzip2::FFI::Reader.open(suffixed_and_prefixed) do |reader|
       assert_equal(65670, reader.read.bytesize)
+      assert_equal(true, reader.eof?)
+      assert_equal(true, reader.eof)
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
     end
@@ -499,12 +521,34 @@ class ReaderTest < Minitest::Test
 
     Bzip2::FFI::Reader.open(prefixed, first_only: true) do |reader|
       assert_equal(55, reader.read.bytesize)
+      assert_equal(true, reader.eof?)
+      assert_equal(true, reader.eof)
       assert_nil(reader.read(1))
       assert_equal(0, reader.read.bytesize)
     end
 
     assert_equal(2, prefixed.seek_count)
     assert_equal('BZh', prefixed.read(3)) # Bzip2 magic for second strcture
+  end
+
+  [[:eof, 'eof'], [:eof?, 'eof_q']].each do |(method, name)|
+    define_method("test_sets_#{name}_when_complete") do
+      Bzip2::FFI::Reader.open(fixture_path('compressed.bz2')) do |reader|
+        assert_equal(false, reader.public_send(method))
+        reader.read(17)
+        assert_equal(false, reader.public_send(method))
+        reader.read
+        assert_equal(true, reader.public_send(method))
+      end
+    end
+
+    define_method("test_#{name}_raises_io_error_when_closed") do
+      File.open(fixture_path('compressed.bz2'), 'rb') do |file|
+        reader = Bzip2::FFI::Reader.new(file)
+        reader.close
+        assert_raises(IOError) { reader.public_send(method) }
+      end
+    end
   end
 
   def test_finalizer

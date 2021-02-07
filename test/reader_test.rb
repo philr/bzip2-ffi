@@ -79,6 +79,8 @@ class ReaderTest < Minitest::Test
             decompressed = reader.read(read_size)
           end
 
+          assert_equal(input.pos, reader.pos)
+
           if buffer
             refute_nil(decompressed)
             assert_same(Encoding::ASCII_8BIT, decompressed.encoding)
@@ -101,6 +103,8 @@ class ReaderTest < Minitest::Test
         else
           decompressed = reader.read
         end
+
+        assert_equal(buffer.bytesize, reader.pos)
 
         refute_nil(decompressed)
         assert_same(Encoding::ASCII_8BIT, decompressed.encoding)
@@ -548,6 +552,26 @@ class ReaderTest < Minitest::Test
         reader.close
         assert_raises(IOError) { reader.public_send(method) }
       end
+    end
+  end
+
+  def test_pos_returns_decompressed_position
+    Bzip2::FFI::Reader.open(fixture_path('compressed.bz2')) do |reader|
+      assert_equal(0, reader.pos)
+      reader.read(17)
+      assert_equal(17, reader.pos)
+      reader.read(8837)
+      assert_equal(8854, reader.pos)
+      reader.read
+      assert_equal(65670, reader.pos)
+    end
+  end
+
+  def test_pos_raises_io_error_when_closed
+    File.open(fixture_path('compressed.bz2'), 'rb') do |file|
+      reader = Bzip2::FFI::Reader.new(file)
+      reader.close
+      assert_raises(IOError) { reader.pos }
     end
   end
 

@@ -219,7 +219,8 @@ module Bzip2
         @in_buffer = nil
         @structure_number = 1
         @structure_start_pos = 0
-        @pos = 0
+        @in_pos = 0
+        @out_pos = 0
 
         decompress_init(stream)
       end
@@ -341,6 +342,15 @@ module Bzip2
       end
       alias eof eof?
 
+      # Returns the number of decompressed bytes that have been read.
+      #
+      # @return [Integer] The number of decompressed bytes that have been read.
+      # @raise [IOError] If the {Reader} has been closed.
+      def pos
+        check_closed
+        @out_pos
+      end
+
       private
 
       # Attempts to decompress and return `count` bytes.
@@ -371,7 +381,7 @@ module Bzip2
               bytes = io.read(READ_BUFFER_SIZE)
 
               if bytes && bytes.bytesize > 0
-                @pos += bytes.bytesize
+                @in_pos += bytes.bytesize
                 in_eof = bytes.bytesize < READ_BUFFER_SIZE
                 @in_buffer = ::FFI::MemoryPointer.new(1, bytes.bytesize)
                 @in_buffer.write_bytes(bytes)
@@ -384,7 +394,7 @@ module Bzip2
 
             # Reached the end of input without reading anything in the current
             # bzip2 structure. No more data to process.
-            if @pos == @structure_start_pos
+            if @in_pos == @structure_start_pos
               @out_eof = true
               break
             end
@@ -420,7 +430,7 @@ module Bzip2
                 # Re-initialize to read a second bzip2 structure if there is
                 # still input available and not restricting to the first stream.
                 @structure_number += 1
-                @structure_start_pos = @pos - s[:avail_in]
+                @structure_start_pos = @in_pos - s[:avail_in]
                 decompress_init(s)
               else
                 # May have already read data after the end of the first bzip2
@@ -452,6 +462,7 @@ module Bzip2
         if @out_eof && result.bytesize == 0
           nil
         else
+          @out_pos += result.bytesize
           result
         end
       end
@@ -461,11 +472,11 @@ module Bzip2
       # a bzip2 structure.
       def attempt_seek_to_structure_start
         if io.respond_to?(:seek)
-          diff = @structure_start_pos - @pos
+          diff = @structure_start_pos - @in_pos
           if diff < 0
             begin
               io.seek(diff, ::IO::SEEK_CUR)
-              @pos += diff
+              @in_pos += diff
             rescue IOError
             end
           end

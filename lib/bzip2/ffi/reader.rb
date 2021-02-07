@@ -55,12 +55,14 @@ module Bzip2
       #
       # @private
       READ_BUFFER_SIZE = 4096 #:nodoc:
+      private_constant :READ_BUFFER_SIZE
 
       # The number of uncompressed bytes to read at a time when using {#read}
       # without a length.
       #
       # @private
       DEFAULT_DECOMPRESS_COUNT = 4096 #:nodoc:
+      private_constant :DEFAULT_DECOMPRESS_COUNT
 
       class << self
         # Use send to keep this hidden from YARD (visibility tag does not work).

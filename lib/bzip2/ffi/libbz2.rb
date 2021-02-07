@@ -74,5 +74,6 @@ module Bzip2
       # int BZ2_bzDecompressEnd (bz_stream *strm);
       attach_function :BZ2_bzDecompressEnd, [BzStream.by_ref], :int
     end
+    private_constant :Libbz2
   end
 end

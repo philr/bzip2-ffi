@@ -45,6 +45,7 @@ module Bzip2
       #
       # @private
       OUT_BUFFER_SIZE = 4096 #:nodoc:
+      private_constant :OUT_BUFFER_SIZE
 
       class << self
         # Use send to keep this hidden from YARD (visibility tag does not work).

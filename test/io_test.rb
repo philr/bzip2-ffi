@@ -39,6 +39,9 @@ class IOTest < Minitest::Test
     end
   end
 
+  # Private constant.
+  LIBBZ2 = Bzip2::FFI.const_get(:Libbz2)
+
   def test_autoclose_set_true
     io = TestIO.new(DummyIO.new, autoclose: false)
     assert_equal(false, io.autoclose?)
@@ -195,7 +198,7 @@ class IOTest < Minitest::Test
     io = TestIO.new(DummyIO.new)
     s = io.stream
     refute_nil(s)
-    assert_kind_of(Bzip2::FFI::Libbz2::BzStream, s)
+    assert_kind_of(LIBBZ2.const_get(:BzStream), s)
   end
 
   def test_stream_when_closed
@@ -224,15 +227,16 @@ class IOTest < Minitest::Test
   end
 
   {
-    Bzip2::FFI::Libbz2::BZ_SEQUENCE_ERROR => Bzip2::FFI::Error::SequenceError,
-    Bzip2::FFI::Libbz2::BZ_PARAM_ERROR => Bzip2::FFI::Error::ParamError,
-    Bzip2::FFI::Libbz2::BZ_MEM_ERROR => Bzip2::FFI::Error::MemoryError,
-    Bzip2::FFI::Libbz2::BZ_DATA_ERROR => Bzip2::FFI::Error::DataError,
-    Bzip2::FFI::Libbz2::BZ_DATA_ERROR_MAGIC => Bzip2::FFI::Error::MagicDataError,
-    Bzip2::FFI::Libbz2::BZ_CONFIG_ERROR => Bzip2::FFI::Error::ConfigError
-  }.each do |code, error_class|
-    define_method("test_check_error_error_#{code}") do
+    :BZ_SEQUENCE_ERROR => Bzip2::FFI::Error::SequenceError,
+    :BZ_PARAM_ERROR => Bzip2::FFI::Error::ParamError,
+    :BZ_MEM_ERROR => Bzip2::FFI::Error::MemoryError,
+    :BZ_DATA_ERROR => Bzip2::FFI::Error::DataError,
+    :BZ_DATA_ERROR_MAGIC => Bzip2::FFI::Error::MagicDataError,
+    :BZ_CONFIG_ERROR => Bzip2::FFI::Error::ConfigError
+  }.each do |type, error_class|
+    define_method("test_check_error_error_#{type}") do
       io = TestIO.new(DummyIO.new)
+      code = LIBBZ2.const_get(type)
       assert_raises(error_class) { io.check_error(code) }
     end
   end

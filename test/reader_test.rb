@@ -218,7 +218,7 @@ class ReaderTest < Minitest::Test
     # read from the compressed stream (read Bzip2::FFI::Reader::READ_BUFFER_SIZE
     # bytes at a time).
 
-    assert_equal(0, 4096 % Bzip2::FFI::Reader::READ_BUFFER_SIZE)
+    assert_equal(0, 4096 % Bzip2::FFI::Reader.const_get(:READ_BUFFER_SIZE))
     result = Bzip2::FFI::Reader.read(fixture_path('lorem-first-structure-4096-bytes.txt.bz2'))
     expected = File.open(fixture_path('lorem.txt'), 'rb') {|f| f.read }
     assert_equal(expected, result)
@@ -329,7 +329,7 @@ class ReaderTest < Minitest::Test
     end
   end
 
-  [1024, Bzip2::FFI::Reader::READ_BUFFER_SIZE, Bzip2::FFI::Reader::READ_BUFFER_SIZE + 1, 8192].each do |size|
+  [1024, Bzip2::FFI::Reader.const_get(:READ_BUFFER_SIZE), Bzip2::FFI::Reader.const_get(:READ_BUFFER_SIZE) + 1, 8192].each do |size|
     define_method("test_bzip_truncated_to_#{size}_bytes") do
       partial = StringIO.new
 

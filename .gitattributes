@@ -1,3 +1,3 @@
 # Treat .txt test fixtures as binaries (prevent autocrlf conversions that would
-# cause tests to fail).
+# cause tests to fail on Windows).
 /test/fixtures/*.txt -text

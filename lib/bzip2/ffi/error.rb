@@ -3,8 +3,8 @@
 
 module Bzip2
   module FFI
-    # The Bzip2::FFI::Error namespace contains exception classes that are raised
-    # if an error occurs whilst compressing or decompressing data.
+    # The {Error} module contains exception classes that are raised if an error
+    # occurs whilst compressing or decompressing data.
     module Error
       # Base class for Bzip2::FFI exceptions.
       class Bzip2Error < IOError

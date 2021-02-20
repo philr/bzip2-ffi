@@ -5,8 +5,8 @@ require 'pathname'
 
 module Bzip2
   module FFI
-    # `Writer` compresses and writes a bzip2 compressed stream or file. The
-    # public instance methods of `Writer` are intended to be equivalent to those
+    # {Writer} compresses and writes a bzip2 compressed stream or file. The
+    # public instance methods of {Writer} are intended to be equivalent to those
     # of a standard `IO` object.
     #
     # Data can be written as a stream using {open} and {#write}. For example,
@@ -18,7 +18,7 @@ module Bzip2
     #       end
     #     end
     #
-    # Alternatively, without passing a block to `open`:
+    # Alternatively, without passing a block to {open}:
     #
     #     writer = Bzip2::FFI::Writer.open(io_or_path)
     #     begin
@@ -33,8 +33,8 @@ module Bzip2
     #
     #     Bzip2::FFI::Writer.write(io_or_path, 'Hello, World!')
     #
-    # The {open} and {write} methods accept either an `IO`-like object or a file
-    # path. `IO`-like objects must have a `write` method. Paths can be given as
+    # The {open} and {write} methods accept either an IO-like object or a file
+    # path. IO-like objects must have a `#write` method. Paths can be given as
     # either a `String` or `Pathname`.
     #
     # No character conversion is performed when writing and compressing. The
@@ -51,24 +51,24 @@ module Bzip2
         # Use send to keep this hidden from YARD (visibility tag does not work).
         send(:public, :new)
 
-        # Opens a {Writer} to compress and write bzip2 compressed data to
-        # either an `IO`-like object or a file. `IO`-like objects must have a
-        # `write` method. Files can be specified using either a `String`
-        # containing the file path or a `Pathname`.
+        # Opens a {Writer} to compress and write bzip2 compressed data to either
+        # an IO-like object or a file. IO-like objects must have a `#write`
+        # method. Files can be specified using either a `String` containing the
+        # file path or a `Pathname`.
         #
-        # If no block is given, the opened `Writer` instance is returned. After
+        # If no block is given, the opened {Writer} instance is returned. After
         # writing data, the instance must be closed using the {#close} method in
         # order to complete the compression process.
         #
-        # If a block is given, it will be passed the opened `Writer` instance
-        # as an argument. After the block terminates, the `Writer` instance will
+        # If a block is given, it will be passed the opened {Writer} instance
+        # as an argument. After the block terminates, the {Writer} instance will
         # automatically be closed. `open` will then return the result of the
         # block.
         #
         # The following options can be specified using the `options` `Hash`:
         #
-        # * `:autoclose` - When passing an `IO`-like object, set to `true` to
-        #                  close the `IO` when the `Writer` instance is closed.
+        # * `:autoclose` - When passing an IO-like object, set to `true` to
+        #                  close it when the {Writer} instance is closed.
         # * `:block_size` - Specifies the block size used for compression. It
         #                   should be set to an integer between 1 and 9
         #                   inclusive. The actual block size used is 100 kB
@@ -90,25 +90,25 @@ module Bzip2
         #                    the fallback. Allowable values range from 0 to 250
         #                    inclusive. 0 is a special case, equivalent to using
         #                    the default libbz2 work factor value (30 as of
-        #                    bzip2 v1.0.6). If not specified, `:work_factor`
+        #                    bzip2 v1.0.8). If not specified, `:work_factor`
         #                    defaults to 0.
         #
-        # If an `IO`-like object that has a `binmode` method is passed to
-        # `open`, `binmode` will be called on `io_or_path` before yielding to
-        # the block or returning.
+        # If an IO-like object that has a `#binmode` method is passed to {open},
+        # `#binmode` will be called on `io_or_path` before yielding to the block
+        # or returning.
         #
         # If a path to a file that already exists is passed to `open`, the file
         # will be truncated before writing.
         #
-        # @param io_or_path [Object] Either an `IO`-like object with a `write`
+        # @param io_or_path [Object] Either an IO-like object with a `#write`
         #                            method or a file path as a `String` or
         #                            `Pathname`.
         # @param options [Hash] Optional parameters (`:autoclose`, `:block_size`
         #                       and `:small`).
-        # @return [Object] The opened `Writer` instance if no block is given, or
+        # @return [Object] The opened {Writer} instance if no block is given, or
         #                  the result of the block if a block is given.
         # @raise [ArgumentError] If `io_or_path` is _not_ a `String`, `Pathname`
-        #                        or an `IO`-like object with a `write` method.
+        #                        or an IO-like object with a `#write` method.
         # @raise [Errno::ENOENT] If the parent directory of the specified file
         #                        does not exist.
         # @raise [Error::Bzip2Error] If an error occurs when initializing
@@ -126,14 +126,14 @@ module Bzip2
         end
 
         # Compresses data from a `String` and writes an entire bzip2 compressed
-        # structure to either an `IO`-like object or a file. `IO`-like objects
-        # must have a `write` method. Files can be specified using either a
+        # structure to either an IO-like object or a file. IO-like objects
+        # must have a `#write` method. Files can be specified using either a
         # `String` containing the file path or a `Pathname`.
         #
         # The following options can be specified using the `options` `Hash`:
         #
-        # * `:autoclose` - When passing an `IO`-like object, set to `true` to
-        #                  close the `IO` when the `Writer` instance is closed.
+        # * `:autoclose` - When passing an IO-like object, set to `true` to
+        #                  close it when the {Writer} instance is closed.
         # * `:block_size` - Specifies the block size used for compression. It
         #                   should be set to an integer between 1 and 9
         #                   inclusive. The actual block size used is 100 kB
@@ -155,28 +155,28 @@ module Bzip2
         #                    the fallback. Allowable values range from 0 to 250
         #                    inclusive. 0 is a special case, equivalent to using
         #                    the default libbz2 work factor value (30 as of
-        #                    bzip2 v1.0.6). If not specified, `:work_factor`
+        #                    bzip2 v1.0.8). If not specified, `:work_factor`
         #                    defaults to 0.
         #
         # No character conversion is performed. The raw bytes from `string` are
         # compressed (using the encoding of `string`).
         #
-        # If an `IO`-like object that has a `binmode` method is passed to
-        # `write`, `binmode` will be called on `io_or_path` before any
+        # If an IO-like object that has a `#binmode` method is passed to
+        # {write}, `#binmode` will be called on `io_or_path` before any
         # compressed data is written.
         #
         # The number of uncompressed bytes written is returned.
         #
-        # @param io_or_path [Object] Either an `IO`-like object with a `write`
+        # @param io_or_path [Object] Either an IO-like object with a `#write`
         #                            method or a file path as a `String` or
         #                            `Pathname`.
-        # @param string [Object] The string to write (`to_s` will be called
-        #                        before writing).
+        # @param string [Object] The string to write (the result of calling
+        #                        `#to_s` on `string` will be written).
         # @param options [Hash] Optional parameters (`:autoclose`, `:block_size`
         #                       and `:small`).
         # @return [Integer] The number of uncompressed bytes written.
         # @raise [ArgumentError] If `io_or_path` is _not_ a `String`, `Pathname`
-        #                        or an `IO`-like object with a `write` method.
+        #                        or an IO-like object with a `#write` method.
         # @raise [Errno::ENOENT] If the parent directory of the specified file
         #                        does not exist.
         # @raise [Error::Bzip2Error] If an error occurs when initializing
@@ -190,10 +190,10 @@ module Bzip2
         private
 
         # Returns a Proc that can be used as a finalizer to call
-        # `BZ2_bzCompressEnd` with the given `stream`.
+        # {Libbz2::BZ2_bzCompressEnd} with the given `stream`.
         #
         # @param stream [Libbz2::BzStream] The stream that should be passed to
-        #                                  `BZ2_bzCompressEnd`.
+        #                                  {Libbz2::BZ2_bzCompressEnd}.
         def finalize(stream)
           ->(id) do
             Libbz2::BZ2_bzCompressEnd(stream)
@@ -201,13 +201,13 @@ module Bzip2
         end
       end
 
-      # Initializes a {Writer} to write compressed data to an `IO`-like object
-      # (`io`). `io` must have a `write` method.
+      # Initializes a {Writer} to write compressed data to an IO-like object
+      # (`io`). `io` must have a `#write` method.
       #
       # The following options can be specified using the `options` `Hash`:
       #
-      # * `:autoclose` - When passing an `IO`-like object, set to `true` to
-      #                  close the `IO` when the `Writer` instance is closed.
+      # * `:autoclose` - When passing an IO-like object, set to `true` to
+      #                  close it when the {Writer} instance is closed.
       # * `:block_size` - Specifies the block size used for compression. It
       #                   should be set to an integer between 1 and 9
       #                   inclusive. The actual block size used is 100 kB
@@ -229,18 +229,18 @@ module Bzip2
       #                    the fallback. Allowable values range from 0 to 250
       #                    inclusive. 0 is a special case, equivalent to using
       #                    the default libbz2 work factor value (30 as of
-      #                    bzip2 v1.0.6). If not specified, `:work_factor`
+      #                    bzip2 v1.0.8). If not specified, `:work_factor`
       #                    defaults to 0.
       #
-      # `binmode` is called on `io` if `io` responds to `binmode`.
+      # `#binmode` is called on `io` if `io` responds to `#binmode`.
       #
-      # After use, the `Writer` instance must be closed using the {#close}
+      # After use, the {Writer} instance must be closed using the {#close}
       # method in order to complete the compression process.
       #
-      # @param io [Object] An `IO`-like object that has a `write` method.
+      # @param io [Object] An IO-like object that has a `#write` method.
       # @param options [Hash] Optional parameters (`:autoclose`, `:block_size`
       #                       and `:small`).
-      # @raise [ArgumentError] If `io` is `nil` or does not respond to `write`.
+      # @raise [ArgumentError] If `io` is `nil` or does not respond to `#write`.
       # @raise [RangeError] If `options[:block_size]` is less than 1 or greater
       #                     than 9, or `options[:work_factor]` is less than 0 or
       #                     greater than 250.
@@ -265,11 +265,11 @@ module Bzip2
       # {Writer}.
       #
       # If the {open} method is used with a block, it is not necessary to call
-      # `close`. Otherwise, `close` must be called once the all the data to be
+      # {close}. Otherwise, {close} must be called once the all the data to be
       # compressed has been passed to `#write`.
       #
       # @return [NilType] `nil`.
-      # @raise [IOError] If the `Writer` has already been closed.
+      # @raise [IOError] If the {Writer} has already been closed.
       def close
         s = stream
         flush_buffers(s, Libbz2::BZ_FINISH, Libbz2::BZ_STREAM_END)
@@ -287,11 +287,11 @@ module Bzip2
       #
       # The number of uncompressed bytes written is returned.
       #
-      # @param string [Object] The string to write (`to_s` will be called
-      #                        before writing).
+      # @param string [Object] The string to write (the result of calling
+      #                        `#to_s` on `string` will be written).
       # @return [Integer] The number of uncompressed bytes written.
       # @raise [Error::Bzip2Error] If an error occurs during compression.
-      # @raise [IOError] If the `Writer` has been closed.
+      # @raise [IOError] If the {Writer} has been closed.
       def write(string)
         string = string.to_s
 
@@ -326,14 +326,14 @@ module Bzip2
       # writes out the current bzip2 compressed block to the underlying
       # compressed stream or file.
       #
-      # It is not usually necessary to call `flush`.
+      # It is not usually necessary to call {flush}.
       #
-      # Calling `flush` may result in a larger compressed output.
+      # Calling {flush} may result in a larger compressed output.
       #
       # @return [Writer] `self`.
       # @raise [Error::Bzip2Error] If an error occurs during the flush
       #                            operation.
-      # @raise [IOError] If the `Writer` has been closed.
+      # @raise [IOError] If the {Writer} has been closed.
       def flush
         flush_buffers(stream, Libbz2::BZ_FLUSH, Libbz2::BZ_RUN_OK)
         self
@@ -351,14 +351,15 @@ module Bzip2
 
       private
 
-      # Calls `BZ2_bzCompress` repeatedly without input to complete compression
-      # of data that has been provided in prior calls.
+      # Calls {Libbz2::BZ2_bzCompress} repeatedly without input to complete
+      # compression of data that has been provided in prior calls.
       #
-      # @param s [Libbz2::BzStream] The stream to pass to `BZ2_bzCompress`.
-      # @param action [Integer] The action to pass to `BZ2_bzCompress`.
+      # @param s [Libbz2::BzStream] The stream to pass to
+      #                             {Libbz2::BZ2_bzCompress}.
+      # @param action [Integer] The action to pass to {Libbz2::BZ2_bzCompress}.
       # @param terminate_result [Integer] The result code that indicates when
       #                                   the action has been completed.
-      # @raise [Error::Bzip2Error] If `BZ2_bzCompress` reports an error.
+      # @raise [Error::Bzip2Error] If {Libbz2::BZ2_bzCompress} reports an error.
       def flush_buffers(s, action, terminate_result)
         s[:next_in] = nil
         s[:avail_in] = 0

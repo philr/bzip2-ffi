@@ -6,8 +6,8 @@ require 'stringio'
 
 module Bzip2
   module FFI
-    # `Reader` reads and decompresses a bzip2 compressed stream or file. The
-    # public instance methods of `Reader` are intended to be equivalent to those
+    # {Reader} reads and decompresses a bzip2 compressed stream or file. The
+    # public instance methods of {Reader} are intended to be equivalent to those
     # of a standard `IO` object.
     #
     # Data can be read as a stream using {open} and {#read}, for example:
@@ -18,7 +18,7 @@ module Bzip2
     #       end
     #     end
     #
-    # Alternatively, without passing a block to `open`:
+    # Alternatively, without passing a block to {open}:
     #
     #     reader = Bzip2::FFI::Reader.open(io_or_path)
     #     begin
@@ -33,23 +33,24 @@ module Bzip2
     #
     #     uncompressed = Bzip2::FFI::Reader.read(io_or_path)
     #
-    # The {open} and {read} methods accept either an `IO`-like object or a file
-    # path. `IO`-like objects must have a `read` method. Paths can be given as
+    # The {open} and {read} methods accept either an IO-like object or a file
+    # path. IO-like objects must have a `#read` method. Paths can be given as
     # either a `String` or `Pathname`.
     #
     # No character conversion is performed on decompressed bytes. The {read} and
     # {#read} methods return instances of `String` that represent the raw
-    # decompressed bytes, with `encoding` set to `Encoding::ASCII_8BIT` (also
+    # decompressed bytes, with `#encoding` set to `Encoding::ASCII_8BIT` (also
     # known as `Encoding::BINARY`).
     #
-    # `Reader` will read a single bzip2 compressed structure from the given
-    # stream or file. If the stream or file contains data beyond the end of
-    # the bzip2 structure, such data may be read during decompression. If such
-    # an overread has occurred and the `IO`-like object being read from has a
-    # `seek` method, `Reader` will use it to reposition the stream to the byte
-    # immediately following the end of the bzip2 structure. If `seek` raises
-    # an `IOError`, it will be caught and the stream position will be left
-    # unchanged.
+    # {Reader} will normally read all consecutive bzip2 compressed structure
+    # from the given stream or file (unless the `:first_only` parameter is
+    # specified - see {open}). If the stream or file contains additional data
+    # beyond the end of the compressed bzip2 data, it may be read during
+    # decompression. If such an overread has occurred and the IO-like object
+    # being read from has a `#seek` method, {Reader} will use it to reposition
+    # the stream to the byte immediately following the end of the compressed
+    # bzip2 data. If `#seek` raises an `IOError`, it will be caught and the
+    # stream position will be left unchanged.
     class Reader < IO
       # The number of bytes read from the compressed data stream at a time.
       #
@@ -68,23 +69,23 @@ module Bzip2
         # Use send to keep this hidden from YARD (visibility tag does not work).
         send(:public, :new)
 
-        # Opens a {Reader} to read and decompress data from either an `IO`-like
-        # object or a file. `IO`-like objects must have a `read` method. Files
+        # Opens a {Reader} to read and decompress data from either an IO-like
+        # object or a file. IO-like objects must have a `#read` method. Files
         # can be specified using either a `String` containing the file path or a
         # `Pathname`.
         #
-        # If no block is given, the opened `Reader` instance is returned. After
+        # If no block is given, the opened {Reader} instance is returned. After
         # use, the instance should be closed using the {#close} method.
         #
-        # If a block is given, it will be passed the opened `Reader` instance
-        # as an argument. After the block terminates, the `Reader` instance will
-        # automatically be closed. `open` will then return the result of the
+        # If a block is given, it will be passed the opened {Reader} instance
+        # as an argument. After the block terminates, the {Reader} instance will
+        # automatically be closed. {open} will then return the result of the
         # block.
         #
         # The following options can be specified using the `options` `Hash`:
         #
-        # * `:autoclose` - When passing an `IO`-like object, set to `true` to
-        #                  close the `IO` when the `Reader` instance is closed.
+        # * `:autoclose` - When passing an IO-like object, set to `true` to
+        #                  close it when the {Reader} instance is closed.
         # * `:first_only` - Bzip2 files can contain multiple consecutive
         #                   compressed strctures. Normally all the structures
         #                   will be decompressed with the decompressed bytes
@@ -95,18 +96,21 @@ module Bzip2
         #              decompressing more slowly (roughly 2,300 kB less memory
         #              at about half the speed).
         #
-        # If an `IO`-like object that has a `binmode` method is passed to
-        # `open`, `binmode` will be called on `io_or_path` before yielding to
-        # the block or returning.
+        # If an IO-like object that has a `#binmode` method is passed to {open},
+        # `#binmode` will be called on `io_or_path` before yielding to the block
+        # or returning.
         #
-        # @param io_or_path [Object] Either an `IO`-like object with a `read`
+        # @param io_or_path [Object] Either an IO-like object with a `#read`
         #                            method or a file path as a `String` or
         #                            `Pathname`.
         # @param options [Hash] Optional parameters (`:autoclose` and `:small`).
-        # @return [Object] The opened `Reader` instance if no block is given, or
+        # @yield [reader] If a block is given, it is yielded to.
+        # @yieldparam reader [Reader] The new {Reader} instance.
+        # @yieldresult [Object] A result to be returned as the result of {open}.
+        # @return [Object] The opened {Reader} instance if no block is given, or
         #                  the result of the block if a block is given.
         # @raise [ArgumentError] If `io_or_path` is _not_ a `String`, `Pathname`
-        #                        or an `IO`-like object with a `read` method.
+        #                        or an IO-like object with a `#read` method.
         # @raise [Errno::ENOENT] If the specified file does not exist.
         # @raise [Error::Bzip2Error] If an error occurs when initializing
         #                            libbz2.
@@ -123,16 +127,15 @@ module Bzip2
         end
 
         # Reads and decompresses and entire bzip2 compressed structure from
-        # either an `IO`-like object or a file and returns the decompressed
-        # bytes as a `String`. `IO`-like objects must have a `read` method.
-        # Files can be specified using either a `String` containing the file
-        # path or a `Pathname`.
+        # either an IO-like object or a file and returns the decompressed bytes
+        # as a `String`. IO-like objects must have a `#read` method. Files can
+        # be specified using either a `String` containing the file path or a
+        # `Pathname`.
         #
         # The following options can be specified using the `options` `Hash`:
         #
-        # * `:autoclose` - When passing an `IO`-like object, set to `true` to
-        #                  close the `IO` when the compressed data has been
-        #                  read.
+        # * `:autoclose` - When passing an IO-like object, set to `true` to
+        #                  close it when the compressed data has been read.
         # * `:first_only` - Bzip2 files can contain multiple consecutive
         #                   compressed strctures. Normally all the structures
         #                   will be decompressed with the decompressed bytes
@@ -143,23 +146,23 @@ module Bzip2
         #              decompressing more slowly (roughly 2,300 kB less memory
         #              at about half the speed).
         #
-        # No character conversion is performed on decompressed bytes. `read`
+        # No character conversion is performed on decompressed bytes. {read}
         # returns a `String` that represents the raw decompressed bytes, with
         # `encoding` set to `Encoding::ASCII_8BIT` (also known as
         # `Encoding::BINARY`).
         #
-        # If an `IO`-like object that has a `binmode` method is passed to
-        # `read`, `binmode` will be called on `io_or_path` before any compressed
-        # data is read.
+        # If an IO-like object that has a `#inmode` method is passed to {read},
+        # `#binmode` will be called on `io_or_path` before any compressed data
+        # is read.
         #
-        # @param io_or_path [Object] Either an `IO`-like object with a `read`
+        # @param io_or_path [Object] Either an IO-like object with a `#read`
         #                            method or a file path as a `String` or
         #                            `Pathname`.
         # @param options [Hash] Optional parameters (`:autoclose`, `:first_only`
         #                       and `:small`).
         # @return [String] The decompressed data.
         # @raise [ArgumentError] If `io_or_path` is _not_ a `String`, `Pathname`
-        #                        or an `IO`-like object with a `read` method.
+        #                        or an IO-like object with a `#read` method.
         # @raise [Errno::ENOENT] If the specified file does not exist.
         # @raise [Error::Bzip2Error] If an error occurs when initializing
         #                            libbz2 or decompressing data.
@@ -171,11 +174,11 @@ module Bzip2
 
         private
 
-        # Returns a Proc that can be used as a finalizer to call
-        # `BZ2_bzDecompressEnd` with the given `stream`.
+        # Returns a `Proc` that can be used as a finalizer to call
+        # {Libbz2::BZ2_bzDecompressEnd} with the given `stream`.
         #
         # @param stream [Libbz2::BzStream] The stream that should be passed to
-        #                                  `BZ2_bzDecompressEnd`.
+        #                                  {Libbz2::BZ2_bzDecompressEnd}.
         def finalize(stream)
           ->(id) do
             Libbz2::BZ2_bzDecompressEnd(stream)
@@ -183,12 +186,12 @@ module Bzip2
         end
       end
 
-      # Initializes a {Reader} to read compressed data from an `IO`-like object
-      # (`io`). `io` must have a `read` method.
+      # Initializes a {Reader} to read compressed data from an IO-like object
+      # (`io`). `io` must have a `#read` method.
       #
       # The following options can be specified using the `options` `Hash`:
       #
-      # * `:autoclose` - Set to `true` to close `io` when the `Reader` instance
+      # * `:autoclose` - Set to `true` to close `io` when the {Reader} instance
       #                  is closed.
       # * `:first_only` - Bzip2 files can contain multiple consecutive
       #                   compressed strctures. Normally all the structures will
@@ -200,15 +203,15 @@ module Bzip2
       #              decompressing more slowly (roughly 2,300 kB less memory
       #              at about half the speed).
       #
-      # `binmode` is called on `io` if `io` responds to `binmode`.
+      # `#binmode` is called on `io` if `io` responds to `#binmode`.
       #
-      # After use, the `Reader` instance should be closed using the {#close}
+      # After use, the {Reader} instance should be closed using the {#close}
       # method.
       #
-      # @param io [Object] An `IO`-like object with a `read` method.
+      # @param io [Object] An IO-like object with a `#read` method.
       # @param options [Hash] Optional parameters (`:autoclose`, `:first_only`
       #                       and `:small`).
-      # @raise [ArgumentError] If `io` is `nil` or does not respond to `read`.
+      # @raise [ArgumentError] If `io` is `nil` or does not respond to `#read`.
       # @raise [Error::Bzip2Error] If an error occurs when initializing libbz2.
       def initialize(io, options = {})
         super
@@ -231,11 +234,11 @@ module Bzip2
       # Ends decompression and closes the {Reader}.
       #
       # If the {open} method is used with a block, it is not necessary to call
-      # `close`. Otherwise, `close` should be called once the `Reader` is no
+      # {#close}. Otherwise, {#close} should be called once the {Reader} is no
       # longer needed.
       #
       # @return [NilType] `nil`.
-      # @raise [IOError] If the `Reader` has already been closed.
+      # @raise [IOError] If the {Reader} has already been closed.
       def close
         s = stream
 
@@ -265,17 +268,17 @@ module Bzip2
       # A result of `nil` or a `String` with a length less than `length` bytes
       # indicates that the end of the decompressed data has been reached.
       #
-      # If `length` is `nil`, `read` reads until the end of the decompressed
+      # If `length` is `nil`, {#read} reads until the end of the decompressed
       # data, returning the uncompressed bytes as a `String`.
       #
-      # If `length` is 0, `read` returns an empty `String`.
+      # If `length` is 0, {#read} returns an empty `String`.
       #
       # If the optional `buffer` argument is present, it must reference a
       # `String` that will receive the decompressed data. `buffer` will
-      # contain only the decompressed data after the call to `read`, even if it
+      # contain only the decompressed data after the call to {#read}, even if it
       # is not empty beforehand.
       #
-      # No character conversion is performed on decompressed bytes. `read`
+      # No character conversion is performed on decompressed bytes. {#read}
       # returns a `String` that represents the raw decompressed bytes, with
       # `encoding` set to `Encoding::ASCII_8BIT` (also known as
       # `Encoding::BINARY`).
@@ -292,7 +295,7 @@ module Bzip2
       #                  the end of the decompressed data has been reached.
       # @raise [ArgumentError] If `length` is negative.
       # @raise [Error::Bzip2Error] If an error occurs during decompression.
-      # @raise [IOError] If the `Reader` has been closed.
+      # @raise [IOError] If the {Reader} has been closed.
       def read(length = nil, buffer = nil)
         if buffer
           buffer.clear
@@ -363,9 +366,9 @@ module Bzip2
       # @return [String] The decompressed data as a `String` with ASCII-8BIT
       #                  encoding, or `nil` if length was a positive integer and
       #                  the end of the decompressed data has been reached.
-      # @raise [ArgumentError] if `count` is not greater than or equal to 1.
+      # @raise [ArgumentError] If `count` is not greater than or equal to 1.
       # @raise [Error::Bzip2Error] If an error occurs during decompression.
-      # @raise [IOError] If the `Reader` has been closed.
+      # @raise [IOError] If the {Reader} has been closed.
       def decompress(count)
         raise ArgumentError, "count must be a positive integer" unless count >= 1
         s = stream
@@ -469,9 +472,9 @@ module Bzip2
         end
       end
 
-      # Attempts to reposition the compressed stream to the start of the
-      # current structure. Used when BZ2_bzDecompress has read beyond the end of
-      # a bzip2 structure.
+      # Attempts to reposition the compressed stream to the start of the current
+      # structure. Used when {Libbz2::BZ2_bzDecompress} has read beyond the end
+      # of a bzip2 structure.
       def attempt_seek_to_structure_start
         if io.respond_to?(:seek)
           diff = @structure_start_pos - @in_pos
@@ -485,27 +488,30 @@ module Bzip2
         end
       end
 
-      # Calls BZ2_bzDecompressInit to initialize the decompression stream `s`.
+      # Calls {Libbz2::BZ2_bzDecompressInit} to initialize the decompression
+      # stream `s`.
       #
       # Defines a finalizer to ensure that the memory associated with the stream
       # is deallocated.
       #
       # @param s [Libbz2::BzStream] The stream to initialize decompression for.
-      # @raise [Error::Bzip2Error] If `BZ2_bzDecompressInit` reports an error.
+      # @raise [Error::Bzip2Error] If {Libbz2::BZ2_bzDecompressInit} reports an
+      #                            error.
       def decompress_init(s)
         check_error(Libbz2::BZ2_bzDecompressInit(s, 0, @small))
 
         ObjectSpace.define_finalizer(self, self.class.send(:finalize, s))
       end
 
-      # Calls BZ2_bzDecompressEnd to release memory associated with the
-      # decompression stream `s`.
+      # Calls {Libbz2::BZ2_bzDecompressEnd} to release memory associated with
+      # the decompression stream `s`.
       #
       # Notifies `ObjectSpace` that it is no longer necessary to finalize the
-      # `Reader` instance.
+      # {Reader} instance.
       #
       # @param s [Libbz2::BzStream] The stream to end decompression for.
-      # @raise [Error::Bzip2Error] If `BZ2_bzDecompressEnd` reports an error.
+      # @raise [Error::Bzip2Error] If {Libbz2::BZ2_bzDecompressEnd} reports an
+      #                            error.
       def decompress_end(s)
         res = Libbz2::BZ2_bzDecompressEnd(s)
         ObjectSpace.undefine_finalizer(self)

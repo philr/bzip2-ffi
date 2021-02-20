@@ -211,8 +211,22 @@ class ReaderTest < Minitest::Test
     end
   end
 
+  def test_reads_all_when_bzip2_structure_ends_at_end_of_a_compressed_data_read
+    # Tests s[:avail_in] reaching zero when @in_eof is false at the end of the
+    # only bzip2 structure.
+    #
+    # Requires a single structure bzip2 fixture that has a compressed size of
+    # Bzip2::FFI::Reader::READ_BUFFER_SIZE bytes.
+
+    assert_equal(0, 4096 % Bzip2::FFI::Reader.const_get(:READ_BUFFER_SIZE))
+    result = Bzip2::FFI::Reader.read(fixture_path('lorem-4096-bytes-compressed.txt.bz2'))
+    expected = File.open(fixture_path('lorem.txt'), 'rb') {|f| f.read(8930) }
+    assert_equal(expected, result)
+  end
+
   def test_reads_all_when_first_bzip2_structure_ends_at_end_of_a_compressed_data_read
-    # Tests s[:avail_in] reaching zero when @in_eof is false.
+    # Tests s[:avail_in] reaching zero when @in_eof is false at the end of the
+    # first bzip2 structure with additional bzip2 structures following.
     #
     # Requires a bzip2 fixture with a first structure that ends at the end of a
     # read from the compressed stream (read Bzip2::FFI::Reader::READ_BUFFER_SIZE

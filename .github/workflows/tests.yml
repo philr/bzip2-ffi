@@ -7,7 +7,7 @@ jobs:
     name: ${{ matrix.ruby }} on ${{ matrix.os }}${{ matrix.name_suffix }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019]
+        os: [ubuntu-20.04, windows-2019, macos-10.15]
         ruby: ['1.9.3', '2.0', '2.1', '2.2', '2.3', '2.4', '2.5', '2.6', '2.7', '3.0', jruby-1.7, jruby-9.0, jruby-9.1, jruby-9.2]
         architecture: [default]
         name_suffix: ['']
@@ -15,6 +15,8 @@ jobs:
         exclude:
           - os: windows-2019
             ruby: jruby-1.7
+          - os: macos-10.15
+            ruby: '1.9.3'
         include:
           - os: windows-2019
             ruby: '2.0'
@@ -37,6 +39,16 @@ jobs:
             name_suffix: ' (experimental)'
             experimental: true
           - os: windows-2019
+            ruby: jruby-head
+            achitecture: default
+            name_suffix: ' (experimental)'
+            experimental: true
+          - os: macos-10.15
+            ruby: head
+            achitecture: default
+            name_suffix: ' (experimental)'
+            experimental: true
+          - os: macos-10.15
             ruby: jruby-head
             achitecture: default
             name_suffix: ' (experimental)'
@@ -74,7 +86,7 @@ jobs:
         shell: bash
         if: startsWith(matrix.ruby, 'jruby-')
         run: |
-          if [[ "${{ matrix.os }}" == ubuntu-20.04 ]] && ( [[ "${{ matrix.ruby }}" == jruby-1.* ]] || [[ "${{ matrix.ruby }}" == jruby-9.0* ]] )
+          if ( [[ "${{ matrix.os }}" == ubuntu-20.04 ]] || [[ "${{ matrix.os }}" == macos-10.15 ]] ) && ( [[ "${{ matrix.ruby }}" == jruby-1.* ]] || [[ "${{ matrix.ruby }}" == jruby-9.0* ]] )
           then
             # Use Java 8 for old versions of JRuby so that the ffi gem is loaded
             # instead of the stdlib version of ffi.

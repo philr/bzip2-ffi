@@ -10,19 +10,14 @@ compressed data as an `IO`-like stream.
 
 ## Installation
 
-To install the Bzip2::FFI gem, run the following command:
-
-    gem install bzip2-ffi
-
-To add Bzip2::FFI as a Bundler dependency, add the following line to your
-`Gemfile`:
-
-    gem 'bzip2-ffi'
+The Bzip2::FFI gem can be installed by running `gem install bzip2-ffi` or by
+adding `gem 'bzip2-ffi'` to your `Gemfile` and running `bundle install`.
 
 
 ## Compatibility
 
-Bzip2::FFI is tested on Ruby MRI 1.9.3+ and JRuby 1.7+.
+Bzip2::FFI requires a minimum of Ruby MRI 1.9.3 or JRuby 1.7 (in 1.9 mode or
+later).
 
 
 ## Runtime Dependencies
@@ -54,66 +49,81 @@ Library. Links to the installer can be found on the bzip2-windows release page.
 
 To use Bzip2::FFI, it must first be loaded with:
 
-    require 'bzip2/ffi'
+```ruby
+require 'bzip2/ffi'
+```
 
 
 ### Compressing
 
 Data can be compressed using the `Bzip2::FFI::Writer` class. For example, the
-following compresses lines read from standard input (`ARGF`):
+following compresses lines read from `ARGF` (either standard input, or file
+names given as command-line arguments:
 
-    Bzip2::FFI::Writer.open(io_or_path) do |writer|
-      ARGF.each_line do |line|
-        writer.write(line)
-      end
-    end
+```ruby
+Bzip2::FFI::Writer.open(io_or_path) do |writer|
+  ARGF.each_line do |line|
+    writer.write(line)
+  end
+end
+```
 
 Alternatively, without passing a block to `open`:
 
-    writer = Bzip2::FFI::Writer.open(io_or_path)
-    begin
-      ARGF.each_line do |line|
-        writer.write(line)
-      end
-    ensure
-      writer.close
-    end
+```ruby
+writer = Bzip2::FFI::Writer.open(io_or_path)
+begin
+  ARGF.each_line do |line|
+    writer.write(line)
+  end
+ensure
+  writer.close
+end
+```
 
 An entire bzip2 structure can also be written in a single step:
 
-    Bzip2::FFI::Writer.write(io_or_path, 'Hello, World!')
+```ruby
+Bzip2::FFI::Writer.write(io_or_path, 'Hello, World!')
+```
 
 In each of the examples above, `io_or_path` can either be a path to a file to
-write to or an `IO`-like object that has a `write` method.
+write to or an `IO`-like object that has a `#write` method.
 
 
 ### Decompressing
 
 Data can be decompressed using the `Bzip2::FFI::Reader` class. For example:
 
-    Bzip2::FFI::Reader.open(io_or_path) do |reader|
-      while buffer = reader.read(1024) do
-        # process uncompressed bytes in buffer
-      end
-    end
+```ruby
+Bzip2::FFI::Reader.open(io_or_path) do |reader|
+  while buffer = reader.read(1024) do
+    # process uncompressed bytes in buffer
+  end
+end
+```
 
 Alternatively, without passing a block to `open`:
 
-    reader = Bzip2::FFI::Reader.open(io_or_path)
-    begin
-      while buffer = reader.read(1024) do
-        # process uncompressed bytes in buffer
-      end
-    ensure
-      reader.close
-    end
+```ruby
+reader = Bzip2::FFI::Reader.open(io_or_path)
+begin
+  while buffer = reader.read(1024) do
+    # process uncompressed bytes in buffer
+  end
+ensure
+  reader.close
+end
+```
 
 All the available bzipped data can be read and decompressed in a single step:
 
-    uncompressed = Bzip2::FFI::Reader.read(io_or_path)
+```ruby
+uncompressed = Bzip2::FFI::Reader.read(io_or_path)
+```
 
 In each of the examples above, `io_or_path` can either be a path to a file to
-read from or an `IO`-like object that has a `read` method.
+read from or an `IO`-like object that has a `#read` method.
 
 
 ### Character Encoding
@@ -121,8 +131,8 @@ read from or an `IO`-like object that has a `read` method.
 Bzip2::FFI does not perform any encoding conversion when reading or writing.
 Data read using `Bzip2::FFI::Reader` is returned as `String` instances with
 ASCII-8BIT (BINARY) encoding representing the raw decompressed bytes.
-`Bzip2::FFI::Writer` compresses the raw bytes from the `Strings` passed to the
-`write` method (using the encoding of the `String`).
+`Bzip2::FFI::Writer` compresses the raw bytes from the `String` instances passed
+to the `#write` method (using the encoding of the `String`).
 
 
 ## Documentation

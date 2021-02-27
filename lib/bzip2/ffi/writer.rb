@@ -346,7 +346,7 @@ module Bzip2
       # @raise [IOError] If the {Writer} has been closed.
       def pos
         s = stream
-        (s[:total_in_hi32] << 32) + s[:total_in_lo32]
+        (s[:total_in_hi32] << 32) | s[:total_in_lo32]
       end
 
       private

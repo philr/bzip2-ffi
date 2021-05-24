@@ -135,6 +135,26 @@ ASCII-8BIT (BINARY) encoding representing the raw decompressed bytes.
 to the `#write` method (using the encoding of the `String`).
 
 
+### Streaming and Memory Usage
+
+Bzip2::FFI compresses and decompresses data as a stream, allowing large files to
+be handled without requiring the complete contents to be held in memory.
+
+When decompressing, 4 KB of compressed data is read at a time. An additional 4
+KB is required to pass the data to libbz2. Decompressed data is output in blocks
+dictated by the length passed to `Bzip2::FFI::Reader#read` (defaulting to 4 KB
+and requiring twice the length in memory to read from libbz2).
+
+When compressing, up to 4 KB of compressed data is written at a time, requiring
+up to 8 KB of memory. An additional copy is also taken of the `String` passed to
+`Bzip2::FFI::Writer#write`.
+
+Internally, libbz2 allocates additional memory according to the bzip2 block
+size. Please refer to the
+[Memory Management](https://sourceware.org/bzip2/manual/manual.html#memory-management)
+section of the Bzip2 documentation for details.
+
+
 ## Documentation
 
 Documentation for Bzip2::FFI is available on

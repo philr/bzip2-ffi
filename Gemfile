@@ -38,8 +38,15 @@ group :test do
   # ffi 1.9.15 is declared as compatible with Ruby >= 1.8.7, but doesn't compile
   # on Ruby 1.9.3 on Windows.
   #
+  # The source version of ffi 1.15.5 is declared as compatible with Ruby >= 2.3.
+  # The binary version of 1.15.5 is declared as compatible with Ruby >= 2.4, so
+  # doesn't get used. The using the source version results in a segmentation
+  # fault during libffi initialization.
+  #
   # Limit to earlier compatible versions.
   if RUBY_VERSION < '2.0' && RUBY_PLATFORM =~ /mingw/
     gem 'ffi', '< 1.9.0'
+  elsif RUBY_VERSION < '2.4' && RUBY_PLATFORM =~ /mingw/
+    gem 'ffi', '< 1.15.5'
   end
 end

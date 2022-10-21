@@ -7,18 +7,18 @@ jobs:
     name: ${{ matrix.ruby }} on ${{ matrix.os }}${{ matrix.name_suffix }}
     strategy:
       matrix:
-        os: [ubuntu-20.04, windows-2019, macos-10.15]
+        os: [ubuntu-20.04, windows-2022, macos-11]
         ruby: ['1.9.3', '2.0', '2.1', '2.2', '2.3', '2.4', '2.5', '2.6', '2.7', '3.0', '3.1', jruby-1.7, jruby-9.0, jruby-9.1, jruby-9.2, jruby-9.3]
         architecture: [default]
         name_suffix: ['']
         experimental: [false]
         exclude:
-          - os: windows-2019
+          - os: windows-2022
             ruby: jruby-1.7
-          - os: macos-10.15
+          - os: macos-11
             ruby: '1.9.3'
         include:
-          - os: windows-2019
+          - os: windows-2022
             ruby: '2.0'
             architecture: x86
             name_suffix: ' (x86)'
@@ -33,22 +33,22 @@ jobs:
             architecture: default
             name_suffix: ' (experimental)'
             experimental: true
-          - os: windows-2019
+          - os: windows-2022
             ruby: head
             architecture: default
             name_suffix: ' (experimental)'
             experimental: true
-          - os: windows-2019
+          - os: windows-2022
             ruby: jruby-head
             architecture: default
             name_suffix: ' (experimental)'
             experimental: true
-          - os: macos-10.15
+          - os: macos-11
             ruby: head
             architecture: default
             name_suffix: ' (experimental)'
             experimental: true
-          - os: macos-10.15
+          - os: macos-11
             ruby: jruby-head
             architecture: default
             name_suffix: ' (experimental)'
@@ -86,7 +86,7 @@ jobs:
         shell: bash
         if: startsWith(matrix.ruby, 'jruby-')
         run: |
-          if ( [[ "${{ matrix.os }}" == ubuntu-20.04 ]] || [[ "${{ matrix.os }}" == macos-10.15 ]] ) && ( [[ "${{ matrix.ruby }}" == jruby-1.* ]] || [[ "${{ matrix.ruby }}" == jruby-9.0* ]] )
+          if ( [[ "${{ matrix.os }}" == ubuntu-20.04 ]] || [[ "${{ matrix.os }}" == macos-11 ]] ) && ( [[ "${{ matrix.ruby }}" == jruby-1.* ]] || [[ "${{ matrix.ruby }}" == jruby-9.0* ]] )
           then
             # Use Java 8 for old versions of JRuby so that the ffi gem is loaded
             # instead of the stdlib version of ffi.

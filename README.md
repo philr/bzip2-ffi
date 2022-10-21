@@ -27,7 +27,7 @@ Bzip2::FFI is a pure-Ruby library that uses
 the libbz2 dynamic library at runtime.
 
 libbz2 is available as a package on most UNIX-based systems (for example,
-`libbz2-1.0` on Debian and Ubuntu, or `bzip2-libs` on Fedora, Red Hat, and
+`libbz2-1.0` on Debian and Ubuntu, or `bzip2-libs` on Fedora, Red Hat and
 CentOS).
 
 
@@ -42,7 +42,7 @@ Download the DLL only package that matches your Ruby installation (x86 or x64)
 and extract to your `ruby\bin` directory.
 
 Builds from the bzip2-windows project depend on the Visual Studio C Runtime
-Library. Links to the installer can be found on the bzip2-windows release page.
+Library. Links to the installer can be found on the bzip2-windows releases page.
 
 
 ## Usage
@@ -58,7 +58,7 @@ require 'bzip2/ffi'
 
 Data can be compressed using the `Bzip2::FFI::Writer` class. For example, the
 following compresses lines read from `ARGF` (either standard input, or file
-names given as command-line arguments:
+names given as command-line arguments):
 
 ```ruby
 Bzip2::FFI::Writer.open(io_or_path) do |writer|
@@ -116,7 +116,8 @@ ensure
 end
 ```
 
-All the available bzipped data can be read and decompressed in a single step:
+All the available bzipped data can also be read and decompressed in a single
+step:
 
 ```ruby
 uncompressed = Bzip2::FFI::Reader.read(io_or_path)

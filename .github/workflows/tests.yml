@@ -90,6 +90,9 @@ jobs:
           then
             # Use Java 8 for old versions of JRuby so that the ffi gem is loaded
             # instead of the stdlib version of ffi.
+            # This is currently not required (Java 8 is the default on all
+            # operating systems currently configured). Later versions may change
+            # that.
             echo "::set-output name=java_home::$JAVA_HOME_8_X64"
           else
             echo "::set-output name=java_home::$JAVA_HOME"

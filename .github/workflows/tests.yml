@@ -93,22 +93,13 @@ jobs:
             # This is currently not required (Java 8 is the default on all
             # operating systems currently configured). Later versions may change
             # that.
-            echo "::set-output name=java_home::$JAVA_HOME_8_X64"
-          else
-            echo "::set-output name=java_home::$JAVA_HOME"
+            echo "JAVA_HOME=$JAVA_HOME_8_X64" >> $GITHUB_ENV
           fi
       - run: ruby --version
-        env:
-          JAVA_HOME: ${{ startsWith(matrix.ruby, 'jruby-') && steps.java_home.outputs.java_home }}
       - run: gem --version
-        env:
-          JAVA_HOME: ${{ startsWith(matrix.ruby, 'jruby-') && steps.java_home.outputs.java_home }}
       - run: bundle --version
-        env:
-          JAVA_HOME: ${{ startsWith(matrix.ruby, 'jruby-') && steps.java_home.outputs.java_home }}
       - run: bundle exec rake test
         env:
-          JAVA_HOME: ${{ startsWith(matrix.ruby, 'jruby-') && steps.java_home.outputs.java_home }}
           TESTOPTS: --verbose
           COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
           CI_NAME: github-actions

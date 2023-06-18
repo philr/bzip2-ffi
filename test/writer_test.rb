@@ -48,11 +48,13 @@ class WriterTest < Minitest::Test
         buffer = io.read(read_size)
         break unless buffer
         assert_equal(buffer.bytesize, writer.write(buffer))
+        assert_equal(io.tell, writer.tell)
         assert_equal(io.pos, writer.pos)
       end
     else
       buffer = io.read
       assert_equal(buffer.bytesize, writer.write(buffer))
+      assert_equal(io.tell, writer.tell)
       assert_equal(io.pos, writer.pos)
     end
   end
@@ -226,38 +228,40 @@ class WriterTest < Minitest::Test
     assert_nil(writer.close)
   end
 
-  def test_pos_returns_uncompressed_position
-    Bzip2::FFI::Writer.open(DummyIO.new) do |writer|
-      assert_equal(0, writer.pos)
-      writer.write('Test')
-      assert_equal(4, writer.pos)
-      writer.write('Complete')
-      assert_equal(12, writer.pos)
-    end
-  end
-
-  def test_pos_returns_uncompressed_64bit_position
-    skip_slow_test_unless_enabled
-
-    # The position is read from separate 32-bit low and high words.
-    Bzip2::FFI::Writer.open(DummyIO.new) do |writer|
-      buffer_bits = 12
-      buffer = "\0".encode(Encoding::ASCII_8BIT) * 2**buffer_bits
-
-      (2**(32 - buffer_bits)).times do |i|
-        writer.write(buffer)
+  [:tell, :pos].each do |method|
+    define_method("test_#{method}_returns_uncompressed_position") do
+      Bzip2::FFI::Writer.open(DummyIO.new) do |writer|
+        assert_equal(0, writer.public_send(method))
+        writer.write('Test')
+        assert_equal(4, writer.public_send(method))
+        writer.write('Complete')
+        assert_equal(12, writer.public_send(method))
       end
-
-      assert_equal(2**32, writer.pos)
-      writer.write(buffer)
-      assert_equal(2**32 + buffer.bytesize, writer.pos)
     end
-  end
 
-  def test_pos_raises_io_error_when_closed
-    writer = Bzip2::FFI::Writer.new(DummyIO.new)
-    writer.close
-    assert_raises(IOError) { writer.pos }
+    define_method("test_#{method}_returns_uncompressed_64bit_position") do
+      skip_slow_test_unless_enabled
+
+      # The position is read from separate 32-bit low and high words.
+      Bzip2::FFI::Writer.open(DummyIO.new) do |writer|
+        buffer_bits = 12
+        buffer = "\0".encode(Encoding::ASCII_8BIT) * 2**buffer_bits
+
+        (2**(32 - buffer_bits)).times do |i|
+          writer.write(buffer)
+        end
+
+        assert_equal(2**32, writer.public_send(method))
+        writer.write(buffer)
+        assert_equal(2**32 + buffer.bytesize, writer.public_send(method))
+      end
+    end
+
+    define_method("test_#{method}_raises_io_error_when_closed") do
+      writer = Bzip2::FFI::Writer.new(DummyIO.new)
+      writer.close
+      assert_raises(IOError) { writer.public_send(method) }
+    end
   end
 
   def test_finalizer

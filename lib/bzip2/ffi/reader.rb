@@ -352,10 +352,11 @@ module Bzip2
       #
       # @return [Integer] The number of decompressed bytes that have been read.
       # @raise [IOError] If the {Reader} has been closed.
-      def pos
+      def tell
         check_closed
         @out_pos
       end
+      alias pos tell
 
       private
 

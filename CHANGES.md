@@ -1,5 +1,15 @@
 # Changes
 
+## Version 1.1.1 - 8-Jul-2023
+
+* Added `Bzip2::FFI::Reader#tell`, returning the number of decompressed bytes
+  that have been read. `Bzip2::FFI::Reader#pos` is now an alias for
+  `Bzip2::FFI::Reader#tell`.
+* Added `Bzip2::FFI::Writer#tell`, returning the number of uncompressed bytes
+  that have been written. `Bzip2::FFI::Writer#pos` is now an alias for
+  `Bzip2::FFI::Writer#tell`.
+
+
 ## Version 1.1.0 - 27-Feb-2021
 
 * `Bzip2::FFI::Reader` will now read all consecutive bzip2 compressed structures

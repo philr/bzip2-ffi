@@ -3,7 +3,7 @@ require File.expand_path(File.join('..', 'lib', 'bzip2', 'ffi', 'version'), __FI
 Gem::Specification.new do |s|
   s.name = 'bzip2-ffi'
   s.version = Bzip2::FFI::VERSION
-  s.summary = 'Bzip2 library using FFI bindings for libbz2 to stream read and write compressed data.'
+  s.summary = 'Reads and writes bzip2 compressed data as a stream using FFI bindings for libbz2.'
   s.description = <<-EOF
     Bzip2::FFI is a Ruby wrapper for libbz2 using FFI bindings.
 

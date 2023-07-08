@@ -51,6 +51,11 @@ module Bzip2
     # the stream to the byte immediately following the end of the compressed
     # bzip2 data. If `#seek` raises an `IOError`, it will be caught and the
     # stream position will be left unchanged.
+    #
+    # {Reader} does not support seeking (it's not supported by the underlying
+    # libbz2 library). There are no `#seek` or `#pos=` methods. The only way to
+    # advance the position is to call {#read}. Discard the result if it's not
+    # needed.
     class Reader < IO
       # The number of bytes read from the compressed data stream at a time.
       #

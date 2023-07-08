@@ -40,6 +40,9 @@ module Bzip2
     # No character conversion is performed when writing and compressing. The
     # {write} and {#write} methods compress the raw bytes from the given
     # `String` (using the encoding of the `String`).
+    #
+    # {Writer} does not support seeking (it's not supported by the underlying
+    # libbz2 library). There are no `#seek` or `#pos=` methods.
     class Writer < IO
       # Size of the buffer passed to libbz2 for it to write compressed data to.
       #

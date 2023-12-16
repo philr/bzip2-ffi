@@ -1,4 +1,4 @@
-require File.expand_path(File.join('..', 'lib', 'bzip2', 'ffi', 'version'), __FILE__)
+require_relative('lib/bzip2/ffi/version')
 
 Gem::Specification.new do |s|
   s.name = 'bzip2-ffi'

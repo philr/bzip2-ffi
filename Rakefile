@@ -7,7 +7,9 @@ BASE_DIR = File.expand_path(File.dirname(__FILE__))
 task :default => :test
 
 def spec
-  @spec ||= eval(File.read('bzip2-ffi.gemspec'))
+  return @spec if @spec
+  path = File.join(BASE_DIR, 'bzip2-ffi.gemspec')
+  @spec = TOPLEVEL_BINDING.eval(File.read(path), path)
 end
 
 # Attempt to find the private key and return a spec with added options for

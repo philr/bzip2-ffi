@@ -131,7 +131,42 @@ module Bzip2
           end
         end
 
-        def each_line(io_or_path, options = {})
+        # Reads and decompresses data from the bzip2 compressed stream or file
+        # and yields each line to the block. The block is called with each line
+        # as a `String`.
+        #
+        # The following options can be specified using the `options` `Hash`:
+        #
+        # * `:autoclose` - When passing an IO-like object, set to `true` to
+        #                  close it when the compressed data has been read.
+        # * `:first_only` - Bzip2 files can contain multiple consecutive
+        #                   compressed strctures. Normally all the structures
+        #                   will be decompressed with the decompressed bytes
+        #                   concatenated. Set to `true` to only read the first
+        #                   structure.
+        # * `:small` - Set to `true` to use an alternative decompression
+        #              algorithm that uses less memory, but at the cost of
+        #              decompressing more slowly (roughly 2,300 kB less memory
+        #              at about half the speed).
+        #
+        # If an IO-like object that has a `#binmode` method is passed to {foreach},
+        # `#binmode` will be called on `io_or_path` before any compressed data
+        # is read.
+        #
+        # @param io_or_path [Object] Either an IO-like object with a `#read`
+        #                            method or a file path as a `String` or
+        #                            `Pathname`.
+        # @param options [Hash] Optional parameters (`:autoclose`, `:first_only`
+        #                       and `:small`).
+        # @yield [line] The block is called with each line as a `String`.
+        # @yieldparam line [String] A line of decompressed data.
+        # @return [NilType] `nil`.
+        # @raise [ArgumentError] If `io_or_path` is _not_ a `String`, `Pathname`
+        #                        or an IO-like object with a `#read` method.
+        # @raise [Errno::ENOENT] If the specified file does not exist.
+        # @raise [Error::Bzip2Error] If an error occurs when initializing
+        #                            libbz2 or decompressing data.
+        def foreach(io_or_path, options = {})
           open(io_or_path, options) do |reader|
             buffer = +""
             until reader.eof?

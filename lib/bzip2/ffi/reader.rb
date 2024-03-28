@@ -131,6 +131,19 @@ module Bzip2
           end
         end
 
+        def each_line(io_or_path, options = {})
+          open(io_or_path, options) do |reader|
+            buffer = +""
+            until reader.eof?
+              buffer << reader.read(READ_BUFFER_SIZE)
+              lines = buffer.split("\n")
+              lines[0...-1].each { |line| yield line }
+              buffer = lines.last
+            end
+            yield buffer unless buffer.empty?
+          end
+        end
+
         # Reads and decompresses and entire bzip2 compressed structure from
         # either an IO-like object or a file and returns the decompressed bytes
         # as a `String`. IO-like objects must have a `#read` method. Files can

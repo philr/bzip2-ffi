@@ -170,7 +170,7 @@ module Bzip2
           open(io_or_path, options) do |reader|
             buffer = +""
             until reader.eof?
-              buffer << reader.read(READ_BUFFER_SIZE)
+              buffer << reader.read
               lines = buffer.split("\n")
               lines[0...-1].each { |line| yield line }
               buffer = lines.last

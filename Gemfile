@@ -37,12 +37,13 @@ group :test do
       gem 'json', '< 2.5.0'
     end
 
-    # term-ansicolor is a dependency of coveralls. Version 1.10.3 is declared as
-    # compatible with any Ruby version, but fails with a syntax error on Ruby <
-    # 2.3.
+    # term-ansicolor is a dependency of coveralls. All versions are falsely
+    # declared as compatible with any Ruby version.
     #
-    # Limit to an earlier compatible version.
-    if RUBY_VERSION < '2.3'
+    # Limit to an earlier compatible versions.
+    if RUBY_VERSION < '2.0'
+      gem 'term-ansicolor', '< 1.5.0'
+    elsif RUBY_VERSION < '2.3'
       gem 'term-ansicolor', '< 1.10.3'
     end
   end

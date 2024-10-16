@@ -44,7 +44,7 @@ group :test do
     if RUBY_VERSION < '2.0'
       gem 'term-ansicolor', '< 1.5.0'
     elsif RUBY_VERSION < '2.3'
-      gem 'term-ansicolor', '< 1.10.3'
+      gem 'term-ansicolor', '< 1.9'
     end
   end
 

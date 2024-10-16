@@ -684,6 +684,14 @@ class ReaderTest < Minitest::Test
     assert(file.closed?)
   end
 
+  def test_foreach_block_io
+    lines = []
+    Bzip2::FFI::Reader.foreach(fixture_path('lorem-first-structure-4096-bytes.txt.bz2'), encoding: "UTF-8") do |line|
+      lines << line.force_encoding('UTF-8')
+    end
+    assert_equal("Lorém ipsúm dòlòr sìt amét, vix cu alìa póstulant, pri ea odio falli ", lines.first)
+  end
+
   def test_class_read_initialize_nil_io
     assert_raises(ArgumentError) { Bzip2::FFI::Reader.read(nil) }
   end

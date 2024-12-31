@@ -17,8 +17,6 @@ jobs:
             ruby: jruby-1.7
           - os: macos-13
             ruby: '1.9.3'
-          - os: windows-2022
-            ruby: '3.4'
         include:
           - os: windows-2022
             ruby: '2.0'
